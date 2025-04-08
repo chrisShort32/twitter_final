@@ -9,6 +9,15 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+
+import warnings
+warnings.filterwarnings(
+    'ignore',
+    category=UserWarning,
+    module='dj_rest_auth.registration.serializers',
+    message='app_settings.* is deprecated, use: app_settings.SIGNUP_FIELDS.*',
+)
+
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -147,11 +156,12 @@ MEDIA_ROOT = BASE_DIR /'media'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'http://3.87.187.27:3000',
     'http://54.147.244.63:3000',
     'http://localhost:5173',
     'http://54.147.244.63:5173',
     'http://127.0.0.1:5173',
+    'http://localhost:8081',
+    'http://54.147.244.63:8081',
 ]
 
 REST_FRAMEWORK = {
@@ -176,10 +186,12 @@ SIMPLE_JWT = {
 # Django AllAuth settings
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'email'}
+SILENCED_SYSTEM_CHECKS = [
+    'allauth.W001', # silence username required warning
+    'allauth.W002', # silence email required warning
+]
 
 # Django Rest Auth settings
 REST_AUTH = {
@@ -187,6 +199,11 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'jwt-auth',
     'JWT_AUTH_REFRESH_COOKIE': 'jwt-refresh-auth',
 }
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 # Custom adapters
 SOCIALACCOUNT_ADAPTER = 'project1.adapters.CustomSocialAccountAdapter'
@@ -196,8 +213,8 @@ ACCOUNT_ADAPTER = 'project1.adapters.CustomAccountAdapter'
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '12345678901-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com',  # Replace with your Google Client ID
-            'secret': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456',  # Replace with your Google Client Secret
+            'client_id': os.getenv( 'GOOGLE_CLIENT_ID'),  # Replace with your Google Client ID
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),  # Replace with your Google Client Secret
             'key': ''
         },
         'SCOPE': [
@@ -206,7 +223,13 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'online',
-        }
+        },
+        'IOS': {
+            'client_id': os.getenv('GOOGLE_IOS_CLIENT_ID'),
+        },
+        'ANDROID': {
+            'client_id': os.getenv('GOOGLE_ANDROID_CLIENT_ID')
+        },
     }
 }
 
