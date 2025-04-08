@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "expo_twitter_login",
+    "slug": "expo_twitter_login",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+   
+    "ios": {
+      "bundleIdentifier": "com.chrisshort.expotwitterlogin",
+      "supportsTablet": true,
+      "ITSAppUsesNonExemptEncryption": false
+    },
+    "android": {
+      "package": "com.tooshort32.expo_twitter_login",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+
+    "scheme": "log-in",
+
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cda59f22-2676-4f48-b112-e6e88c7886bb"
+      }
+    },
+    "owner": "tooshort32"
+  }
+}
