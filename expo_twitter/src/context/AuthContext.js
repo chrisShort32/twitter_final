@@ -133,6 +133,7 @@ export const AuthProvider = ({ children }) => {
     if (!result.success){
       return {success: false}; 
     }
+    else {return {success: true};}
     // Implementation will be handled in the Login screen
     // because it requires Expo's auth session hooks
   };
