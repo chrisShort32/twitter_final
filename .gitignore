@@ -20,3 +20,7 @@ expo_twitter/ios/expotwitterlogin.xcworkspace/xcuserdata/
 *.pyo
 *.pyd
 
+# Xcode environment files
+expo_twitter/ios/.xcode.env
+expo_twitter/ios/.xcode.env.local
+
