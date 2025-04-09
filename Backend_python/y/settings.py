@@ -162,6 +162,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5173',
     'http://localhost:8081',
     'http://54.147.244.63:8081',
+    'http://group3twitter.hopto.org:8081',
 ]
 
 REST_FRAMEWORK = {
