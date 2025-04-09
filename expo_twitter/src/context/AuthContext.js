@@ -61,6 +61,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // validate function
+  const validate = async (userData) => {
+    try {
+      const result = await authApi.validateNewUser(userData);
+      if (result.success) {
+        return { success: true };
+      } else if (result.email) {
+        return { success: false, error: "An account with that email exists"};
+      } else if (result.username) {
+        return { success: false, error: "That username is unavailable"};
+      } else {
+        console.log("Something went wrong in validate");
+        return {success: false, error: "Something went wrong in validate"};
+      }
+    } catch (error) {
+      console.error('Validation Error:', error);
+      return {success: false, error: 'Validation Error'};
+    }
+  };
   // Register function
   const register = async (userData) => {
     setIsLoading(true);
@@ -147,7 +166,8 @@ export const AuthProvider = ({ children }) => {
     register,
     resetPassword,
     logout,
-    signInWithGoogle
+    signInWithGoogle,
+    validate
   };
 
   // Return the provider with the value

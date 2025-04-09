@@ -14,11 +14,12 @@ import {
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { useAuth } from '../context/AuthContext';
+import { validateNewUser } from '../api/authApi';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = ({ navigation }) => {
-  const { login, register, signInWithGoogle, resetPassword, isLoading } = useAuth();
+  const { login, validate, register, signInWithGoogle, resetPassword, isLoading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -131,8 +132,18 @@ const LoginScreen = ({ navigation }) => {
   }
 
   const validateUsernameEmail = async (username, email) => {
-    
+    const userData = {
+      email,
+      username
+    };
+    const result = await validate(userData)
+    if (result.success) {
+      return null;
+    } else {
+      return result.error;
+    }
   }
+
   
   const handleSignUp = async () => {
     if (!username || !email || !password1 || !password2) {
@@ -152,6 +163,12 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
+    const validateInfoMessage = await validateUsernameEmail(username, email);
+    if (validateInfoMessage != null) {
+      console.log(JSON.stringify(validateInfoMessage));
+      alert(JSON.stringify(validateInfoMessage));
+      return;
+    }
     const userData = {
       email,
       password1,

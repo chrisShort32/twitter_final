@@ -78,7 +78,7 @@ export const validateNewUser = async(userData) => {
     console.log("user data: ", JSON.stringify(userData));
 
     // send the data
-    const response = await fetch(`${API_BASE_URL}/validate_new_user/`, {
+    const response = await fetch("http://54.147.244.63:8000/validate_new_user/", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -90,10 +90,10 @@ export const validateNewUser = async(userData) => {
 
     if (data.email_exists) {
       console.log("Account with that email exists: ", email);
-      return {success: false, email: email, username: username};
+      return {success: false, email: email};
     } else if (data.username_exists) {
       console.log("That username is not available: ", username);
-      return {success: false, email: email, username: username};
+      return {success: false, username: username};
     } else {
       console.log("Email and username have been validated: ", email, username);
       return {success: true, email: email, username: username};
