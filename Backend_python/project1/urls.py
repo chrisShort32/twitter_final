@@ -1,6 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
-from .views import UserInfoView, PostInfoView, AllUsersView, AllFollowsView
+from .views import UserInfoView, PostInfoView, AllUsersView, AllFollowsView, TopicViewSet
+
+router = DefaultRouter()
+router.register(r'topics', TopicViewSet, basename='topic')
+
 urlpatterns = [
     path('all_users/', views.all_users, name='all_users'),
     path('check_user/', views.check_user_exists, name='check_user'),
@@ -13,4 +18,5 @@ urlpatterns = [
     path('api/follows/', AllFollowsView.as_view(), name='all-follows-api'),
     path('api/username/<int:user_id>/', views.get_username_by_user_id, name='get-username-by-id'),
     path('api/follow-usernames/<int:follow_id>/', views.get_usernames_for_follow, name='get-follow-usernames'),
+    path('api/', include(router.urls)),
 ]

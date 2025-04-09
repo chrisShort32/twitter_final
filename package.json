@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-gesture-handler": "^2.25.0"
+  }
+}

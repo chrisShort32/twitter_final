@@ -192,3 +192,17 @@ class Users(models.Model):
     class Meta:
         managed = False
         db_table = 'users'
+
+
+class Topic(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    location = models.CharField(max_length=200, null=True, blank=True)
+
+    class Meta:
+        db_table = 'topics'
+
+    def __str__(self):
+        return self.title

@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Users, Posts, Follows
+from .models import Users, Posts, Follows, Topic
 from rest_framework.response import Response
-from .serializers import UserSerializer, PostSerializer, FollowSerializer
+from .serializers import UserSerializer, PostSerializer, FollowSerializer, TopicSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.http import JsonResponse
@@ -169,3 +169,19 @@ def validate_signup_info(request):
         return Response({"username_exists": True}, status=404)
     else:
         return Response({"email_username exists": False}, status=200)
+
+class TopicViewSet(viewsets.ModelViewSet):
+    queryset = Topic.objects.all()
+    serializer_class = TopicSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        topics = Topic.objects.all()
+        serializer = TopicSerializer(topics, many=True)
+        return Response(serializer.data)
