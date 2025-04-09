@@ -1,0 +1,22 @@
+# macOS system files
+.DS_Store
+
+# Node dependencies
+node_modules/
+
+# Python virtual environment
+venv/
+
+# Expo files
+.expo/
+
+# iOS build files
+expo_twitter/ios/Pods/
+expo_twitter/ios/build/
+expo_twitter/ios/expotwitterlogin.xcworkspace/xcuserdata/
+
+# Python dependencies
+*.pyc
+*.pyo
+*.pyd
+
