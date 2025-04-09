@@ -21,6 +21,7 @@ const LoginScreen = ({ navigation }) => {
   const { login, register, signInWithGoogle, resetPassword, isLoading } = useAuth();
   
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password1, setPassword] = useState('');
   const [password2, setConfirmPassword] = useState('');
   const [resetEmail, setResetEmail] = useState('');
@@ -104,8 +105,33 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  // Function to determine if password is strong enough
+  function validatePassword(username, email, password) {
+    
+   // Array of regex rules
+   const regexes = [
+    {regex: /[A-Z]/, message: "Password must contain at least one uppercase letter"},
+    {regex: /[a-z]/, message: "Password must contain at least one lowercase letter"},
+    {regex: /[0-9]/, message: "Password must contain at least one number"},
+    {regex: /[^A-Za_z0-9]/, message: "Password must contain at least one special character"},
+    {regex: /.{8,}/, message: "Password must be at least 8 characters long"},
+    {regex: /^((?!password).)*$/i, message: "Password cannot contain the word 'password'"},
+    {regex: /^(?!.*email|.*username)/i, message: "Password cannot contain the email or username"}
+   ];
+
+    // loop to check all regexes - if any fail, password is weak - return fail message
+    for (let { regex, message} of regexes) {
+      if (!regex.test(password)) {
+        return message;
+      }
+    }
+
+    return null;  // Password is valid
+    
+  }
+  
   const handleSignUp = async () => {
-    if (!email || !password1 || !password2) {
+    if (!username || !email || !password1 || !password2) {
       alert("Please fill in all fields");
       return;
     }
@@ -115,22 +141,25 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
     
-    if (password1.length < 6) {
-      alert("Password must be at least 6 characters long");
+    const validationMessage = validatePassword(username, email, password1)
+    console.log("Validation Message: ", validationMessage);
+    if (validationMessage != null) {
+      alert(validationMessage);
       return;
     }
-    
+
     const userData = {
       email,
       password1,
       password2,
-      username: email.split('@')[0] // Simple way to extract a name from email
+      username
     };
     
     const result = await register(userData);
     
     if (result.success) {
       // Navigation will be handled by AuthContext
+      setUsername('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
@@ -227,6 +256,18 @@ const LoginScreen = ({ navigation }) => {
           {isSignUp ? "Create your account" : "Log in to Y"}
         </Text>
         
+        {isSignUp && (
+        <View style={styles.inputView}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="username"
+            placeholderTextColor="#657786"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
+        </View>
+        )}
         <View style={styles.inputView}>
           <TextInput
             style={styles.textInput}
