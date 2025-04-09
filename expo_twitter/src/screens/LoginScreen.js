@@ -129,6 +129,10 @@ const LoginScreen = ({ navigation }) => {
     return null;  // Password is valid
     
   }
+
+  const validateUsernameEmail = async (username, email) => {
+    
+  }
   
   const handleSignUp = async () => {
     if (!username || !email || !password1 || !password2) {

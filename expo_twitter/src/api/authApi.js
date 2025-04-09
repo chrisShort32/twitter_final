@@ -66,6 +66,45 @@ export const googleSignIn = async (userData) => {
       }
 };
 
+
+/**
+ * Validate a new username and email
+ * @param {Object} userData - User registration data
+ * @returns {Promise<Object>} - New user data or error
+ */
+export const validateNewUser = async(userData) => {
+  try {
+    const { email, username } = userData;
+    console.log("user data: ", JSON.stringify(userData));
+
+    // send the data
+    const response = await fetch(`${API_BASE_URL}/validate_new_user/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, username }),
+    });
+
+    const data = await response.json();
+
+    if (data.email_exists) {
+      console.log("Account with that email exists: ", email);
+      return {success: false, email: email, username: username};
+    } else if (data.username_exists) {
+      console.log("That username is not available: ", username);
+      return {success: false, email: email, username: username};
+    } else {
+      console.log("Email and username have been validated: ", email, username);
+      return {success: true, email: email, username: username};
+    }
+  }
+  catch(error) {
+    console.log("Error during validation: ", error);
+    return {success: false, error: "An Error occurred during validation"};
+  }
+}
+
 /**
  * Register a new user
  * @param {Object} userData - User registration data

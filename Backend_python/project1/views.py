@@ -156,3 +156,16 @@ def check_user_exists(request):
     if User.objects.filter(email=email).exists():
         return Response({"exists": True}, status=200)
     return Response({"exists": False}, status=404)
+
+# Final - Verify username and email dont exist
+@api_view(['POST'])
+def validate_signup_info(request):
+    username = request.data.get('username')
+    email = request.data.get('email')
+
+    if User.objects.filter(email=email).exists():
+        return Response({"email_exists": True}, status=404)
+    elif User.objects.filter(username=username).exists():
+        return Response({"username_exists": True}, status=404)
+    else:
+        return Response({"email_username exists": False}, status=200)

@@ -4,6 +4,7 @@ from .views import UserInfoView, PostInfoView, AllUsersView, AllFollowsView
 urlpatterns = [
     path('all_users/', views.all_users, name='all_users'),
     path('check_user/', views.check_user_exists, name='check_user'),
+    path('validate_new_user/', views.validate_signup_info, name='validate_info'),
     path('all_posts/', views.all_posts, name='all_posts'),
     path('view_all_posts/', PostInfoView.as_view(), name='post-info'),   
     path('api/user/<str:username>', UserInfoView.as_view(), name='user-info'),
