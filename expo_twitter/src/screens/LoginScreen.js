@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Switch
 } from 'react-native';
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -25,6 +26,7 @@ const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password1, setPassword] = useState('');
   const [password2, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   
   const [isSignUp, setIsSignUp] = useState(false);
@@ -308,8 +310,21 @@ const LoginScreen = ({ navigation }) => {
             placeholderTextColor="#657786"
             value={password1}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
           />
+
+          {!isSignUp &&
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+            <Switch
+              value={showPassword}
+              onValueChange={setShowPassword}
+            />
+          <Text style={{ marginLeft: 10, color: '#657786' }}>
+            {showPassword ? 'Hide Password' : 'Show Password'}
+          </Text>
+        </View>
+        }
+        
         </View>
         
         {isSignUp && (
@@ -320,8 +335,17 @@ const LoginScreen = ({ navigation }) => {
               placeholderTextColor="#657786"
               value={password2}
               onChangeText={setConfirmPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
             />
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+              <Switch
+                value={showPassword}
+                onValueChange={setShowPassword}
+              />
+              <Text style={{ marginLeft: 10, color: '#657786' }}>
+              {showPassword ? 'Hide Password' : 'Show Password'}
+              </Text>
+            </View>
           </View>
         )}
         
