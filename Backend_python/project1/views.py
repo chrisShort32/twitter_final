@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from django.core.exceptions import ObjectDoesNotExist
+
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
 # its not needed anymore, but i wont delete it.
@@ -147,8 +148,6 @@ def get_usernames_for_follow(request, follow_id):
     except Users.DoesNotExist:
         return JsonResponse({'error': 'User not found!'}, status=404)
 
-
-
 # Project 2 - Check if user exists by email
 @api_view(['POST'])
 def check_user_exists(request):
@@ -161,6 +160,9 @@ def check_user_exists(request):
 	    'username': user.username,
 	    'email': user.email,
     	    'first_name': user.first_name,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
             'last_name': user.last_name,
         }
         return Response(user_data, status=200)

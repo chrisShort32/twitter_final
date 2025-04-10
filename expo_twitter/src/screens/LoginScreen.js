@@ -9,21 +9,24 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Switch
 } from 'react-native';
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { useAuth } from '../context/AuthContext';
+import { validateNewUser } from '../api/authApi';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = ({ navigation }) => {
-  const { login, register, signInWithGoogle, resetPassword, isLoading } = useAuth();
+  const { login, validate, register, signInWithGoogle, resetPassword, isLoading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password1, setPassword] = useState('');
   const [password2, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   
   const [isSignUp, setIsSignUp] = useState(false);
@@ -62,9 +65,11 @@ const LoginScreen = ({ navigation }) => {
       console.log("userInfo: ", JSON.stringify(userInfo));
       // Create or sign in the user
       const userData = {
-        name: userInfo.name,
+        id: userInfo.id,
+        first_name: userInfo.given_name,
+        last_name: userInfo.family_name,
         email: userInfo.email,
-        username: userInfo.family_name + "." + userInfo.given_name + "27",
+        username: userInfo.given_name + "." + userInfo.family_name + "27",
         password1: "lmao-this-is-not-a-good-solution",
         password2: "lmao-this-is-not-a-good-solution",
         auth_type: "google",
@@ -72,15 +77,19 @@ const LoginScreen = ({ navigation }) => {
         picture: userInfo.picture
       };
       
-      const result = await signInWithGoogle(userData);
-      if (result.success)
-      {
-        // do nothing 
-      }
-      else {
+      const result = await signInWithGoogle(userData.email);
+      console.log("signInWithGoogle result: ", JSON.stringify(result));
+      if (result.exists) {
+        console.log("User exists, logged in successfully");
+      } else {
         console.log(`Creating account for email: ${userData.email}`);
         const registered = await register(userData);
         console.log("registered: ", JSON.stringify(registered));
+        if (registered.success) {
+          console.log("User registered successfully")
+        } else {
+          throw new Error("Registration failed");
+        }
       }
     } catch (error) {
       console.error("Google sign in error:", error);
@@ -131,8 +140,18 @@ const LoginScreen = ({ navigation }) => {
   }
 
   const validateUsernameEmail = async (username, email) => {
-    
+    const userData = {
+      email,
+      username
+    };
+    const result = await validate(userData)
+    if (result.success) {
+      return null;
+    } else {
+      return result.error;
+    }
   }
+
   
   const handleSignUp = async () => {
     if (!username || !email || !password1 || !password2) {
@@ -152,6 +171,12 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
+    const validateInfoMessage = await validateUsernameEmail(username, email);
+    if (validateInfoMessage != null) {
+      console.log(JSON.stringify(validateInfoMessage));
+      alert(JSON.stringify(validateInfoMessage));
+      return;
+    }
     const userData = {
       email,
       password1,
@@ -291,8 +316,23 @@ const LoginScreen = ({ navigation }) => {
             placeholderTextColor="#657786"
             value={password1}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
           />
+
+          {!isSignUp && Platform.OS != 'ios' &&
+          <View style={styles.toggleContainer}>
+            <Switch
+              value={showPassword}
+              onValueChange={setShowPassword}
+            />
+            <Text style={styles.toggleText}>
+              {showPassword ? 'Hide Password' : 'Show Password'}
+            </Text>
+            
+         
+        </View>
+        }
+        
         </View>
         
         {isSignUp && (
@@ -303,17 +343,24 @@ const LoginScreen = ({ navigation }) => {
               placeholderTextColor="#657786"
               value={password2}
               onChangeText={setConfirmPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
             />
+            {Platform.OS != 'ios' && (
+            <View style={styles.toggleContainer}>
+               <Switch
+                value={showPassword}
+                onValueChange={setShowPassword}
+              />
+              <Text style={styles.toggleText}>
+                {showPassword ? 'Hide Password' : 'Show Password'}
+              </Text>
+             
+              
+            </View>
+            )}
           </View>
         )}
-        
-        {!isSignUp && (
-          <TouchableOpacity onPress={showForgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
-        )}
-        
+
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={isSignUp ? handleSignUp : handleLogin}
@@ -328,6 +375,12 @@ const LoginScreen = ({ navigation }) => {
           )}
         </TouchableOpacity>
         
+        {!isSignUp && (
+          <TouchableOpacity onPress={showForgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+        )}
+         
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={toggleAuthMode}
@@ -339,7 +392,7 @@ const LoginScreen = ({ navigation }) => {
               : "Don't have an account? Sign up"}
           </Text>
         </TouchableOpacity>
-        
+
         <View style={styles.dividerContainer}>
           <View style={styles.divider} />
           <Text style={styles.orText}>or</Text>
@@ -395,13 +448,26 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: '#E1E8ED',
+    
+    textAlign: 'center',
   },
   textInput: {
     height: 50,
     flex: 1,
-    padding: 10,
+    padding: 20,
     paddingLeft: 20,
+    textAlignVertical: 'center',
     color: '#14171A',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    paddingLeft: 10,
+  },
+  toggleText: {
+    marginLeft: 10,
+    color: '#657786',
+    fontSize: 14,
   },
   forgotPasswordText: {
     color: '#1DA1F2',
@@ -416,7 +482,7 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 50,
     marginBottom: 10,
   },
   buttonText: {
