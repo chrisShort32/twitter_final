@@ -92,7 +92,6 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        //Alert.alert('Registration Failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
@@ -143,18 +142,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google sign in (we'll keep using the existing implementation)
-  const signInWithGoogle = async (userData) => {
-    const result = await authApi.googleSignIn(userData);
-    setUser(userData);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-    if (!result.success){
-      return {success: false}; 
+  // Google sign in
+  const signInWithGoogle = async (email) => {
+    try {
+      const result = await authApi.googleSignIn(email);
+      if (result.exists) {
+        setUser(result);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return {success: true, ...result}; 
+      } else {
+          return {success: false};
+      }
+    } catch (error) {
+      console.error("Sign-in with Google failed:", error);
+      return {success: false, error: error.message};
     }
-    else {return {success: true};}
-    // Implementation will be handled in the Login screen
-    // because it requires Expo's auth session hooks
   };
 
   // Prepare the value object with all the context data and functions

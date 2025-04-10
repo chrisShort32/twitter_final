@@ -65,9 +65,11 @@ const LoginScreen = ({ navigation }) => {
       console.log("userInfo: ", JSON.stringify(userInfo));
       // Create or sign in the user
       const userData = {
-        name: userInfo.name,
+        id: userInfo.id,
+        first_name: userInfo.given_name,
+        last_name: userInfo.family_name,
         email: userInfo.email,
-        username: userInfo.family_name + "." + userInfo.given_name + "27",
+        username: userInfo.given_name + "." + userInfo.family_name + "27",
         password1: "lmao-this-is-not-a-good-solution",
         password2: "lmao-this-is-not-a-good-solution",
         auth_type: "google",
@@ -75,15 +77,19 @@ const LoginScreen = ({ navigation }) => {
         picture: userInfo.picture
       };
       
-      const result = await signInWithGoogle(userData);
-      if (result.success)
-      {
-        // do nothing 
-      }
-      else {
+      const result = await signInWithGoogle(userData.email);
+      console.log("signInWithGoogle result: ", JSON.stringify(result));
+      if (result.exists) {
+        console.log("User exists, logged in successfully");
+      } else {
         console.log(`Creating account for email: ${userData.email}`);
         const registered = await register(userData);
         console.log("registered: ", JSON.stringify(registered));
+        if (registered.success) {
+          console.log("User registered successfully")
+        } else {
+          throw new Error("Registration failed");
+        }
       }
     } catch (error) {
       console.error("Google sign in error:", error);

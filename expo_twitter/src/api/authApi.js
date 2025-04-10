@@ -29,6 +29,7 @@ export const loginUser = async (email, password) => {
         const userData = {
             id: user.id,
             name: `${user.first_name} ${user.last_name}`,
+            username: user.username,
             email: user.email,
             auth_type: 'email',
             token: access, // use token returned from server
@@ -45,25 +46,31 @@ export const loginUser = async (email, password) => {
   }  
 };
 
-export const googleSignIn = async (userData) => {
-      // Check if user exists
-      const checkResponse = await fetch("http://54.147.244.63:8000/check_user/", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ email: userData.email }),
-      });
+export const googleSignIn = async (email) => {
+  try {
+    // Check if user exists
+    const checkResponse = await fetch("http://54.147.244.63:8000/check_user/", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email }),
+    });
 
-      const checkData = await checkResponse.json();
+    const checkData = await checkResponse.json();
+    console.log("checkResponse: ", JSON.stringify(checkData));
 
-      if(checkData.exists) {
-        console.log("User exists, Proceeding with login...");
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        return {success: true, user: userData};
-        
-      } else {
-        console.log(`No account exists with the email ${userData.email}`);
-        return {success: false, user: userData};
-      }
+    if(checkData.exists) {
+      console.log("User exists, Proceeding with login...");
+      await AsyncStorage.setItem('user', JSON.stringify(checkData));
+      return checkData;
+  
+    } else {
+      console.log(`No account exists with the email ${email}`);
+      return { exists: false };
+    }
+  } catch (error) {
+    console.error("googleSignIn error:", error);
+    throw error;
+  }
 };
 
 
@@ -112,7 +119,7 @@ export const validateNewUser = async(userData) => {
  */
 export const registerUser = async (userData) => {
   try {
-    const { email, password1, password2, username } = userData;
+    const { first_name, last_name, email, password1, password2, username } = userData;
     console.log("user data: ", JSON.stringify(userData));  
     // Send reg data to backend
     const response = await fetch(`${API_BASE_URL}/auth/registration/`, {
@@ -120,7 +127,7 @@ export const registerUser = async (userData) => {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password1, password2}),
+        body: JSON.stringify({ first_name, last_name, username, email, password1, password2}),
   
     });
     
@@ -129,16 +136,19 @@ export const registerUser = async (userData) => {
     if (response.ok && data.access) {
         const { access, user } = data;
     
+        
         // Store user session in Async
         const newUserData = {
-            id: user.id,
+            id: userData.id,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
             username: user.username,
 	          email: user.email,
 	          auth_type: 'email',
             token: access, // Use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(newUserData));
-
+        console.log("this is newuserdata: ", newUserData);
         return { success: true, user: newUserData };
     }   else {
 	return { success: false, error: 'Registration Failed' };

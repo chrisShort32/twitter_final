@@ -9,10 +9,12 @@ import {
   SafeAreaView
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import UserProfileCard from '../components/userProfileCard';
 
 const HomeScreen = () => {
   const { user, logout, isLoading } = useAuth();
 
+  console.log(user);
   const handleLogout = async () => {
     await logout();
     // Navigation is handled by the AuthContext
@@ -68,12 +70,15 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
+      <View className="flex-1 flex-row">
+        <UserProfileCard user={user}></UserProfileCard>
+     
       {/* Welcome message */}
-      <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>Welcome, {user?.name || 'User'}!</Text>
-        <Text style={styles.emailText}>{user?.email}</Text>
+        <View className="flex-1" style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>Welcome, {user?.name || 'User'}!</Text>
+          <Text style={styles.emailText}>{user?.email}</Text>
+        </View>
       </View>
-
       {/* Tweets feed */}
       <ScrollView style={styles.feed}>
         {tweets.map(tweet => (
@@ -170,7 +175,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   tweetAuthor: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#14171A',
     marginRight: 5,
