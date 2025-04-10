@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Users, Posts, Follows
+from .models import Posts, Follows
+from django.contrib.auth.models import User
 
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,8 +10,8 @@ class FollowSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):    
 
     class Meta:
-        model = Users
-        fields = '__all__'
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'last_login']
 
 class PostSerializer(serializers.ModelSerializer):
    
