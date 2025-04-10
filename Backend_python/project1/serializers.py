@@ -24,7 +24,7 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Likes
         fields = '__all__'
 
-class RetweetSerializer(serializer.ModelSerializer):
+class RetweetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Retweets
         fields = '__all__'
