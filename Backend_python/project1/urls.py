@@ -13,4 +13,5 @@ urlpatterns = [
     path('api/follows/', AllFollowsView.as_view(), name='all-follows-api'),
     path('api/username/<int:user_id>/', views.get_username_by_user_id, name='get-username-by-id'),
     path('api/follow-usernames/<int:follow_id>/', views.get_usernames_for_follow, name='get-follow-usernames'),
+    path('api/follow_feed/<str:username>/', views.get_following_feed, name='get_following_feed'),
 ]

@@ -183,3 +183,34 @@ def validate_signup_info(request):
         return Response({"username_exists": True}, status=404)
     else:
         return Response({"email_username exists": False}, status=200)
+    
+
+# Final - Get the posts of the users that the original user follows
+@api_view(['POST'])
+def get_following_feed(username):
+    # Get the user info from the username
+    user = User.objects.get(username=username)
+    # Get the people the user follows from the user id
+    user_follows = Follows.objects.filter(user_id=user.id)
+    
+    # Get the id and username of all the people the user follows
+    follow_info = []
+    for follow in user_follows:
+        follow_id = follow.id
+        follow_username = follow.username
+        data = {'id': follow_id, 'username': follow_username}
+        follow_info.append(data)
+
+    # Get the posts of the people the user follows
+    post_info = []
+    for follow in follow_info:
+        # Get the posts by user id
+        posts = Posts.objects.filter(user_id=follow.id)
+        # Serialize the post data
+        serializer = PostSerializer(posts, many=True)
+        # Associate username with post(s)
+        follow_post_data = {'username': follow.username, 'Posts': serializer.data}
+        post_info.append(follow_post_data)
+
+    return JsonResponse(post_info)
+
