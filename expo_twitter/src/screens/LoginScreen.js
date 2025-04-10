@@ -319,15 +319,17 @@ const LoginScreen = ({ navigation }) => {
             secureTextEntry={!showPassword}
           />
 
-          {!isSignUp &&
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+          {!isSignUp && Platform.OS != 'ios' &&
+          <View style={styles.toggleContainer}>
             <Switch
               value={showPassword}
               onValueChange={setShowPassword}
             />
-          <Text style={{ marginLeft: 10, color: '#657786' }}>
-            {showPassword ? 'Hide Password' : 'Show Password'}
-          </Text>
+            <Text style={styles.toggleText}>
+              {showPassword ? 'Hide Password' : 'Show Password'}
+            </Text>
+            
+         
         </View>
         }
         
@@ -343,24 +345,22 @@ const LoginScreen = ({ navigation }) => {
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
             />
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
-              <Switch
+            {Platform.OS != 'ios' && (
+            <View style={styles.toggleContainer}>
+               <Switch
                 value={showPassword}
                 onValueChange={setShowPassword}
               />
-              <Text style={{ marginLeft: 10, color: '#657786' }}>
-              {showPassword ? 'Hide Password' : 'Show Password'}
+              <Text style={styles.toggleText}>
+                {showPassword ? 'Hide Password' : 'Show Password'}
               </Text>
+             
+              
             </View>
+            )}
           </View>
         )}
-        
-        {!isSignUp && (
-          <TouchableOpacity onPress={showForgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
-        )}
-        
+
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={isSignUp ? handleSignUp : handleLogin}
@@ -375,6 +375,12 @@ const LoginScreen = ({ navigation }) => {
           )}
         </TouchableOpacity>
         
+        {!isSignUp && (
+          <TouchableOpacity onPress={showForgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+        )}
+         
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={toggleAuthMode}
@@ -386,7 +392,7 @@ const LoginScreen = ({ navigation }) => {
               : "Don't have an account? Sign up"}
           </Text>
         </TouchableOpacity>
-        
+
         <View style={styles.dividerContainer}>
           <View style={styles.divider} />
           <Text style={styles.orText}>or</Text>
@@ -442,13 +448,26 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: '#E1E8ED',
+    
+    textAlign: 'center',
   },
   textInput: {
     height: 50,
     flex: 1,
-    padding: 10,
+    padding: 20,
     paddingLeft: 20,
+    textAlignVertical: 'center',
     color: '#14171A',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    paddingLeft: 10,
+  },
+  toggleText: {
+    marginLeft: 10,
+    color: '#657786',
+    fontSize: 14,
   },
   forgotPasswordText: {
     color: '#1DA1F2',
@@ -463,7 +482,7 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 50,
     marginBottom: 10,
   },
   buttonText: {
