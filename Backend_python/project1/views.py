@@ -185,23 +185,26 @@ def validate_signup_info(request):
 # Final - Get the posts of the users that the original user follows
 @api_view(['POST'])
 def get_following_feed(request, username):
-    # Get the user info from the username
-    user = User.objects.get(username=username)
-    # Get the people the user follows from the user id
-    follow_relationships = Follows.objects.filter(user_id=user.id)
+    try: 
+        # Get the user info from the username
+        user = User.objects.get(username=username)
+        # Get the people the user follows from the user id
+        follow_relationships = Follows.objects.filter(user_id=user.id)
     
-    post_info = []
-    for follow in follow_relationships:
-        followed_user = User.objects.get(id=follow.following_user_id)
-        # Get the posts by user id
-        posts = Posts.objects.filter(user_id=followed_user.id)
-        # Serialize the post data
-        serializer = PostSerializer(posts, many=True)
-        # Associate username with post(s)
-        post_info.append({
-            'username': followed_user.username,
-            'posts': serializer.data
-        })
+        post_info = []
+        for follow in follow_relationships:
+            followed_user = User.objects.get(id=follow.following_user_id)
+            # Get the posts by user id
+            posts = Posts.objects.filter(user_id=followed_user.id)
+            # Serialize the post data
+            serializer = PostSerializer(posts, many=True)
+            # Associate username with post(s)
+            post_info.append({
+                'username': followed_user.username,
+                'posts': serializer.data
+            })
 
-    return Response(post_info)
+        return Response(post_info)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
 
