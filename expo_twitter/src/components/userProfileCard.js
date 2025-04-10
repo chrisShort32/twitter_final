@@ -8,7 +8,7 @@ const UserProfileCard = ({ user, onEditProfile }) => {
         source={user?.picture ? { uri: user.picture } : require('../../assets/y_logo.png')}
         style={styles.avatar}
       />
-      <Text style={styles.name}>{user?.first_name || 'Username'}</Text>
+      <Text style={styles.name}>{user?.first_name || user?.username}</Text>
       <Text style={styles.handle}>@{user?.username || 'handle'}</Text>
       <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
         <Text style={styles.editButtonText}>Edit Profile</Text>
@@ -19,9 +19,11 @@ const UserProfileCard = ({ user, onEditProfile }) => {
 
 const styles = StyleSheet.create({
   card: {
-    alignItems: 'left',
+    width: '100%',
+    maxWidth: 600,
+    alignItems: 'center',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     backgroundColor: '#f5f8fa',
     borderRadius: 12,
     shadowColor: '#000',
@@ -29,7 +31,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
-    marginBottom: 15,
   },
   avatar: {
     width: 80,

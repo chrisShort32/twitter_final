@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,53 +6,40 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  Dimensions,
+  useWindowDimensions
 } from 'react-native';
+import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import { useAuth } from '../context/AuthContext';
 import UserProfileCard from '../components/userProfileCard';
+import FollowingFeed from '../components/FollowingFeed';
+//import MyPostsFeed from '../components/MyPostsFeed';
 
 const HomeScreen = () => {
   const { user, logout, isLoading } = useAuth();
+  const screenWidth = Dimensions.get('window').width;
+  const isWeb = screenWidth > 600;
 
+  const layout = useWindowDimensions();
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    {key: 'following', title: 'Following'},
+    //{key: 'myposts', title: 'My Posts'},
+  ]);
+
+  const renderScene = SceneMap ({
+    following: () => <FollowingFeed/>,
+    //myposts: () => <MyPostsFeed user={user}/>,
+  });
+
+
+  
   console.log(user);
   const handleLogout = async () => {
     await logout();
     // Navigation is handled by the AuthContext
   };
-
-  // Sample tweets data
-  const tweets = [
-    {
-      id: '1',
-      author: 'Y Official',
-      handle: '@y',
-      content: "Welcome to Y we are much better than X (Twitter)! This is where you'll see the latest Tweets from the people and topics you follow.",
-      timestamp: '2h',
-      likes: 1205,
-      retweets: 342,
-      comments: 89
-    },
-    {
-      id: '2',
-      author: 'Elon Musk',
-      handle: '@elonmusk',
-      content: 'Excited to announce that Y is better than X!',
-      timestamp: '5h',
-      likes: 45600,
-      retweets: 8932,
-      comments: 2134
-    },
-    {
-      id: '3',
-      author: 'NASA',
-      handle: '@NASA',
-      content: 'Another beautiful day on the International Space Station. Check out this view of Earth from 250 miles above!',
-      timestamp: '8h',
-      likes: 32000,
-      retweets: 5600,
-      comments: 1200
-    }
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,44 +57,25 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View className="flex-1 flex-row">
-        <UserProfileCard user={user}></UserProfileCard>
-     
-      {/* Welcome message */}
-        <View className="flex-1" style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>Welcome, {user?.name || 'User'}!</Text>
-          <Text style={styles.emailText}>{user?.email}</Text>
+      <View style={[styles.content, isWeb && styles.webLayout]}>
+        <View style={[styles.containerInner, isWeb && styles.containerInnerWeb]}>
+          <UserProfileCard user={user}></UserProfileCard>
         </View>
       </View>
-      {/* Tweets feed */}
-      <ScrollView style={styles.feed}>
-        {tweets.map(tweet => (
-          <View key={tweet.id} style={styles.tweetContainer}>
-            <View style={styles.tweetHeader}>
-              <Text style={styles.tweetAuthor}>{tweet.author}</Text>
-              <Text style={styles.tweetHandle}>{tweet.handle}</Text>
-              <Text style={styles.tweetTimestamp}>{tweet.timestamp}</Text>
-            </View>
-            <Text style={styles.tweetContent}>{tweet.content}</Text>
-            <View style={styles.tweetActions}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionText}>💬 {tweet.comments}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionText}>🔄 {tweet.retweets}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionText}>❤️ {tweet.likes}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* New tweet button */}
-      <TouchableOpacity style={styles.newTweetButton}>
-        <Text style={styles.newTweetButtonText}>+</Text>
-      </TouchableOpacity>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+        renderTabBar={props => (
+          <TabBar
+          {...props}
+          indicatorStyle= {{ backgroundColor: '#1DA1F2' }}
+          style={{ backgroundColor: '#fff' }}
+          labelStyle= {{ color: '#1DA1F2', fontWeight: 'bold' }}
+          />
+        )}
+      />
     </SafeAreaView>
   );
 };
@@ -146,87 +114,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
-  welcomeContainer: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E1E8ED',
-  },
-  welcomeText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#14171A',
-    marginBottom: 5,
-  },
-  emailText: {
-    fontSize: 14,
-    color: '#657786',
-  },
-  feed: {
+  content: {
     flex: 1,
-  },
-  tweetContainer: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E1E8ED',
-  },
-  tweetHeader: {
-    flexDirection: 'row',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 5,
+    padding: 20,
   },
-  tweetAuthor: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#14171A',
-    marginRight: 5,
+  webLayout: {
+    alignItems: 'flex-start',
+    paddingHorizontal: 40,
+    paddingTop: 20,
   },
-  tweetHandle: {
-    fontSize: 13,
-    color: '#657786',
-    marginRight: 8,
+  containerInner: {
+    width: '100%',
   },
-  tweetTimestamp: {
-    fontSize: 13,
-    color: '#657786',
-  },
-  tweetContent: {
-    fontSize: 15,
-    color: '#14171A',
-    lineHeight: 22,
-    marginBottom: 10,
-  },
-  tweetActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingRight: 40,
-  },
-  actionButton: {
-    padding: 5,
-  },
-  actionText: {
-    fontSize: 13,
-    color: '#657786',
-  },
-  newTweetButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#1DA1F2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-  },
-  newTweetButtonText: {
-    fontSize: 30,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+  containerInnerWeb: {
+    maxWidth: 250,
   },
 });
 
