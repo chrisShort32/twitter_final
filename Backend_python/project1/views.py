@@ -183,7 +183,7 @@ def validate_signup_info(request):
     
 
 # Final - Get the posts of the users that the original user follows
-@api_view(['POST'])
+@api_view(['GET'])
 def get_following_feed(request, username):
     try: 
         # Get the user info from the username
