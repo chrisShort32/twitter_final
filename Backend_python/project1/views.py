@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Users, Posts, Follows
+from .models import Posts, Follows
 from rest_framework.response import Response
 from .serializers import UserSerializer, PostSerializer, FollowSerializer
 from rest_framework import status
@@ -14,16 +14,16 @@ from django.core.exceptions import ObjectDoesNotExist
 # i first started learning. I think using apiView is better. 
 # its not needed anymore, but i wont delete it.
 def all_users(request):
-    users = Users.objects.all()
+    users = User.objects.all()
     return render(request, 'all_users.html', {'users': users})
 
 # i dont know if this is used anywhere and i am scared to delete it
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = Users.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def list(self, request, *args, **kwargs):
-        users = Users.objects.all().prefectch_related('posts', 'follows')
+        users = User.objects.all().prefectch_related('posts', 'follows')
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
@@ -32,10 +32,10 @@ class UserViewSet(viewsets.ModelViewSet):
 class UserInfoView(APIView):
     def get(self, request, username):
         try:
-            user = Users.objects.get(username=username)
+            user = User.objects.get(username=username)
             serializer = UserSerializer(user)
             return Response(serializer.data)
-        except Users.DoesNotExist:
+        except User.DoesNotExist:
             return Response({'error': 'User not found!'}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -51,7 +51,7 @@ def get_user_info(request, username, checkInfo):
 
     try:
         # Fetch the user object based on the username
-        user = Users.objects.get(username__exact=username)
+        user = User.objects.get(username=username)
         user_id = user.user_id  # Get the user's ID to use in the queries
 
         # Determine what data to return based on the 'info' parameter
@@ -60,7 +60,7 @@ def get_user_info(request, username, checkInfo):
             follows_data = Follows.objects.filter(user_id=user_id)
             data = []
             for follow_data in follows_data:
-                user_being_followed = Users.objects.get(user_id=follow_data.following_user_id)
+                user_being_followed = User.objects.get(id=follow_data.following_user_id)
                 data.append(user_being_followed.username)
  
         elif checkInfo == 'Following':
@@ -68,7 +68,7 @@ def get_user_info(request, username, checkInfo):
             following = Follows.objects.filter(following_user_id=user_id)
             data = []
             for follow in following:
-                following_user = Users.objects.get(user_id=follow.user_id)
+                following_user = User.objects.get(id=follow.user_id)
                 data.append(following_user.username)
 
         elif checkInfo == 'Posts':
@@ -80,7 +80,7 @@ def get_user_info(request, username, checkInfo):
 
         return JsonResponse(data, safe=False)
 
-    except Users.DoesNotExist:
+    except User.DoesNotExist:
         return JsonResponse({"error": "User not found!"}, status=404)
 # Create your views here.
 
@@ -94,7 +94,7 @@ def all_posts(request):
 
 class AllUsersView(APIView):
     def get(self, request):
-        users = Users.objects.all()
+        users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
@@ -106,9 +106,9 @@ class AllFollowsView(APIView):
 
 def get_username_by_user_id(request, user_id):
     try:
-        user = Users.objects.get(user_id=user_id)
+        user = User.objects.get(id=user_id)
         return JsonResponse({'username': user.username})
-    except Users.DoesNotExist:
+    except User.DoesNotExist:
         return JsonResponse({'error': 'User not found!'}, status=404)
 
 def get_usernames_for_follow(request, follow_id):
@@ -120,8 +120,8 @@ def get_usernames_for_follow(request, follow_id):
         if follows.exists():
             # Get the first matching follow relationship
             follow = follows.first()
-            user = Users.objects.get(user_id=follow.user_id)
-            following_user = Users.objects.get(user_id=follow.following_user_id)
+            user = User.objects.get(id=follow.user_id)
+            following_user = User.objects.get(id=follow.following_user_id)
             
             return JsonResponse({
                 'user_id': follow.user_id,
@@ -134,8 +134,8 @@ def get_usernames_for_follow(request, follow_id):
             follows = Follows.objects.filter(following_user_id=follow_id)
             if follows.exists():
                 follow = follows.first()
-                user = Users.objects.get(user_id=follow.user_id)
-                following_user = Users.objects.get(user_id=follow.following_user_id)
+                user = User.objects.get(id=follow.user_id)
+                following_user = User.objects.get(id=follow.following_user_id)
                 
                 return JsonResponse({
                     'user_id': follow.user_id,
@@ -145,7 +145,7 @@ def get_usernames_for_follow(request, follow_id):
                 })
             else:
                 return JsonResponse({'error': 'No follow relationship found for this ID!'}, status=404)
-    except Users.DoesNotExist:
+    except User.DoesNotExist:
         return JsonResponse({'error': 'User not found!'}, status=404)
 
 # Project 2 - Check if user exists by email
