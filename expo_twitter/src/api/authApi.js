@@ -28,7 +28,8 @@ export const loginUser = async (email, password) => {
 
         const userData = {
             id: user.id,
-            name: `${user.first_name} ${user.last_name}`,
+            first_name: user.first_name,
+            last_name: user.last_name,
             username: user.username,
             email: user.email,
             auth_type: 'email',

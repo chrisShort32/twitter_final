@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Posts, Follows
+from .models import Posts, Follows, Likes, Retweets
 from rest_framework.response import Response
-from .serializers import UserSerializer, PostSerializer, FollowSerializer
+from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.http import JsonResponse
@@ -185,6 +185,23 @@ def validate_signup_info(request):
         return Response({"email_username exists": False}, status=200)
     
 
+# Final - Get 'like' information for a post
+def get_like_data(post_id, user):
+    likes = Likes.objects.filter(post_id=post_id)
+    return {
+        'like_count': likes.count,
+        'liked_by_user': likes.filter(user=user).exists()
+    }
+
+
+# Final - Get 'retweet' information for a post
+def get_retweet_data(post_id, user):
+    retweets = Retweets.objects.filter(post_id=post_id)
+    return {
+         'retweet_count': retweets.count(),
+         'retweeted_by_user': retweets.filter(user=user).exists()
+    }
+
 # Final - Get the posts of the users that the original user follows
 @api_view(['GET'])
 def get_following_feed(request, username):
@@ -199,13 +216,16 @@ def get_following_feed(request, username):
             followed_user = User.objects.get(id=follow.following_user_id)
             # Get the posts by user id
             posts = Posts.objects.filter(user_id=followed_user.id)
-            # Serialize the post data
-            serializer = PostSerializer(posts, many=True)
-            # Associate username with post(s)
-            post_info.append({
-                'username': followed_user.username,
-                'posts': serializer.data
-            })
+            for post in posts:
+                post_info.append({
+                    'user_id': post.user.id,
+                    'username': followed_user.username,
+                    'post_id': post.post_id,
+                    'post_content': post.content,
+                    'post_timestamp': post.created_at,
+                    **get_like_data(post.post_id, user),
+                    **get_retweet_data(post.post_id, user)
+                })
 
         return Response(post_info)
     except User.DoesNotExist:

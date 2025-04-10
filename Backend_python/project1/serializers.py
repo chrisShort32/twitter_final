@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Posts, Follows
+from .models import Posts, Follows, Likes, Retweets
 from django.contrib.auth.models import User
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -17,4 +17,14 @@ class PostSerializer(serializers.ModelSerializer):
    
      class  Meta:
         model = Posts
+        fields = '__all__'
+
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Likes
+        fields = '__all__'
+
+class RetweetSerializer(serializer.ModelSerializer):
+    class Meta:
+        model = Retweets
         fields = '__all__'
