@@ -183,20 +183,20 @@ def validate_signup_info(request):
     
 
 # Final - Get 'like' information for a post
-def get_like_data(post_id, user):
+def get_like_data(post_id, user_id):
     likes = Likes.objects.filter(post_id=post_id)
     return {
         'like_count': likes.count,
-        'liked_by_user': likes.filter(user=user).exists()
+        'liked_by_user': likes.filter(user_id=user_id).exists()
     }
 
 
 # Final - Get 'retweet' information for a post
-def get_retweet_data(post_id, user):
+def get_retweet_data(post_id, user_id):
     retweets = Retweets.objects.filter(post_id=post_id)
     return {
          'retweet_count': retweets.count(),
-         'retweeted_by_user': retweets.filter(user=user).exists()
+         'retweeted_by_user': retweets.filter(user_id=user_id).exists()
     }
 
 # Final - Get the posts of the users that the original user follows
@@ -220,8 +220,8 @@ def get_following_feed(request, username):
                     'post_id': post.post_id,
                     'post_content': post.content,
                     'post_timestamp': post.created_at,
-                    **get_like_data(post.post_id, user),
-                    **get_retweet_data(post.post_id, user)
+                    **get_like_data(post.post_id, user.id),
+                    **get_retweet_data(post.post_id, user.id)
                 })
 
         return Response(post_info)
