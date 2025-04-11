@@ -189,7 +189,7 @@ def validate_signup_info(request):
 def get_like_data(post_id, user_id):
     likes = Likes.objects.filter(post_id=post_id)
     return {
-        'like_count': likes.count,
+        'like_count': likes.count(),
         'liked_by_user': likes.filter(user_id=user_id).exists()
     }
 
