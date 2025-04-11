@@ -123,8 +123,8 @@ class DjangoSession(models.Model):
 
 
 class Follows(models.Model):
-    user = models.OneToOneField('Users', models.DO_NOTHING, primary_key=True)  # The composite primary key (user_id, following_user_id) found, that is not supported. The first column is selected.
-    following_user = models.ForeignKey('Users', models.DO_NOTHING, related_name='follows_following_user_set')
+    user = models.OneToOneField('User', models.DO_NOTHING, primary_key=True)  # The composite primary key (user_id, following_user_id) found, that is not supported. The first column is selected.
+    following_user = models.ForeignKey('User', models.DO_NOTHING, related_name='follows_following_user_set')
     created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -135,7 +135,7 @@ class Follows(models.Model):
 
 class Likes(models.Model):
     like_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('Users', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
     post = models.ForeignKey('Posts', models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
 
@@ -146,7 +146,7 @@ class Likes(models.Model):
 
 class Posts(models.Model):
     post_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('Users', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
     content = models.TextField()
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
@@ -169,7 +169,7 @@ class Project1User(models.Model):
 
 class Retweets(models.Model):
     retweet_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('Users', models.DO_NOTHING)
+    user = models.ForeignKey('User', models.DO_NOTHING)
     post = models.ForeignKey(Posts, models.DO_NOTHING)
     retweet_timestamp = models.DateTimeField(blank=True, null=True)
 
