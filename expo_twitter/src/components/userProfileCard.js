@@ -10,9 +10,6 @@ const UserProfileCard = ({ user, onEditProfile }) => {
       />
       <Text style={styles.name}>{user?.first_name || user?.username}</Text>
       <Text style={styles.handle}>@{user?.username || 'handle'}</Text>
-      <TouchableOpacity style={styles.editButton} onPress={onEditProfile}>
-        <Text style={styles.editButtonText}>Edit Profile</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -48,18 +45,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#657786',
     marginBottom: 10,
-  },
-  editButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#1DA1F2',
-    borderRadius: 20,
-    width: 100,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
   },
 });
 

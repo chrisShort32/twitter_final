@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import { useAuth } from '../context/AuthContext';
-import UserProfileCard from '../components/userProfileCard';
+import PostInput from '../components/PostInput';
 import FollowingFeed from '../components/FollowingFeed';
-//import MyPostsFeed from '../components/MyPostsFeed';
+import MyPostsFeed from '../components/myPostsFeed';
 
 const HomeScreen = () => {
   const { user, logout, isLoading } = useAuth();
@@ -25,12 +25,12 @@ const HomeScreen = () => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {key: 'following', title: 'Following'},
-    //{key: 'myposts', title: 'My Posts'},
+    {key: 'myposts', title: 'My Posts'},
   ]);
 
   const renderScene = SceneMap ({
     following: () => <FollowingFeed/>,
-    //myposts: () => <MyPostsFeed user={user}/>,
+    myposts: () => <MyPostsFeed user={user}/>,
   });
 
 
@@ -45,23 +45,18 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity>
-          <Image
-            source={user?.picture ? { uri: user.picture } : require('../../assets/y_logo.png')}
-            style={styles.profilePic}
-          />
+        <TouchableOpacity style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Edit Profile</Text>
         </TouchableOpacity>
         <Image source={require('../../assets/y_logo.png')} style={styles.logo} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={[styles.content, isWeb && styles.webLayout]}>
-        <View style={[styles.containerInner, isWeb && styles.containerInnerWeb]}>
-          <UserProfileCard user={user}></UserProfileCard>
-        </View>
+      <View>
+        <PostInput style={styles.postContainer} user={user}></PostInput>
       </View>
+
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -90,6 +85,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
+    marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
   },
@@ -99,8 +95,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   logo: {
-    width: 30,
-    height: 30,
+    width: 50,
+    height: 50,
     resizeMode: 'contain',
   },
   logoutButton: {
@@ -108,11 +104,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: '#1DA1F2',
     borderRadius: 15,
+    width: 90,
   },
   logoutText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 12,
+    textAlign: 'center',
+  },
+  postContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 0.25,
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
   webLayout: {
     alignItems: 'flex-start',
     paddingHorizontal: 40,
-    paddingTop: 20,
+    paddingTop: 15,
   },
   containerInner: {
     width: '100%',
