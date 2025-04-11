@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   content: {
-    flex: 1,
+    flex: 0.25,
     justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
