@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,35 +7,21 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
-  Dimensions,
-  useWindowDimensions
 } from 'react-native';
-import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import { useAuth } from '../context/AuthContext';
 import PostInput from '../components/PostInput';
 import FollowingFeed from '../components/FollowingFeed';
 import MyPostsFeed from '../components/myPostsFeed';
 
 const HomeScreen = () => {
-  const { user, logout, isLoading } = useAuth();
-  const screenWidth = Dimensions.get('window').width;
-  const isWeb = screenWidth > 600;
+  const { user, logout} = useAuth();
+  const [activeTab, setActiveTab] = useState('following');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);  
+ 
+  const handlePostSuccess = () => {
+    setRefreshTrigger(prev => prev + 1)
+  };
 
-  const layout = useWindowDimensions();
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    {key: 'following', title: 'Following'},
-    {key: 'myposts', title: 'My Posts'},
-  ]);
-
-  const renderScene = SceneMap ({
-    following: () => <FollowingFeed/>,
-    myposts: () => <MyPostsFeed user={user}/>,
-  });
-
-
-  
-  console.log(user);
   const handleLogout = async () => {
     await logout();
     // Navigation is handled by the AuthContext
@@ -43,6 +29,7 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.logoutButton}>
@@ -53,25 +40,38 @@ const HomeScreen = () => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-      <View>
-        <PostInput style={styles.postContainer} user={user}></PostInput>
+
+      {/* Post Input */}
+      <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
+        <PostInput user={user} />
       </View>
 
-      <TabView
-        navigationState={{ index, routes }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={{ width: layout.width }}
-        renderTabBar={props => (
-          <TabBar
-          {...props}
-          indicatorStyle= {{ backgroundColor: '#1DA1F2' }}
-          style={{ backgroundColor: '#fff' }}
-          labelStyle= {{ color: '#1DA1F2', fontWeight: 'bold' }}
-          />
-        )}
-      />
-    </SafeAreaView>
+      {/* Tab Buttons */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'following' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('following')}
+        >
+          <Text style={activeTab === 'following' ? styles.tabTextActive : styles.tabText}>Following</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'myposts' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('myposts')}
+        >
+          <Text style={activeTab === 'myposts' ? styles.tabTextActive : styles.tabText}>My Posts</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Feed */}
+      <View style={{ flex: 1, maxWidth: 750, alignSelf: 'center' }} contentContainerStyle={{ paddingBottom: 100 }}>
+        {activeTab === 'following' ? (
+          <FollowingFeed refreshTrigger={refreshTrigger}/>
+         ) : (
+         <MyPostsFeed refreshTrigger={refreshTrigger}/>
+         )}
+      </View>
+    </ScrollView>
+  </SafeAreaView>
   );
 };
 
@@ -88,11 +88,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
-  },
-  profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
   },
   logo: {
     width: 50,
@@ -112,28 +107,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-  postContainer: {
-    flex: 1,
+  tabBar: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 10,
   },
-  content: {
-    flex: 0.25,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
+  tabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderBottomWidth: 2,
+    borderColor: 'transparent',
+    marginHorizontal: 10,
   },
-  webLayout: {
-    alignItems: 'flex-start',
-    paddingHorizontal: 40,
-    paddingTop: 15,
+  tabButtonActive: {
+    borderColor: '#1DA1F2',
   },
-  containerInner: {
-    width: '100%',
+  tabText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '600',
   },
-  containerInnerWeb: {
-    maxWidth: 250,
+  tabTextActive: {
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
+
 
 export default HomeScreen; 

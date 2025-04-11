@@ -249,4 +249,27 @@ def get_user_posts(request, username):
         return Response(post_info)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
+    
+# Final - Add a post to the posts table
+@api_view(['POST'])
+def yeet(request):
+    try:
+        username = request.get('username')
+        post_content = request.get('post_content')
+        user = User.object.get(username=username)
+        user_id = user.id
+
+        Posts.objects.create(
+           user=user_id,
+           content=post_content
+        )
+        return JsonResponse({'status': 'Yeet successfully Yeeted'}, status=201)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
         
