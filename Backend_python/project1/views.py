@@ -231,3 +231,25 @@ def get_following_feed(request, username):
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
 
+# Final - Get the posts of the user for the 'My Posts' feed
+@api_view(['GET'])
+def get_user_posts(request, username):
+    try:
+        post_info = []
+        user = User.objects.get(username=username)
+        posts = Posts.objects.filter(user_id=user.id)
+
+        for post in posts:
+            post_info.append({
+                'user_id': post.user.id,
+                'username': user.username,
+                'post_id': post.post_id,
+                'post_content': post.content,
+                'post_timestampt': post.created_at,
+                **get_like_data(post.post_id, user.id),
+                **get_retweet_data(post.post_id, user.id)
+            })
+        return Response(post_info)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+        
