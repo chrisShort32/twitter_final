@@ -4,15 +4,26 @@ import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'reac
 const PostInput = (user) => {
   const [postText, setPostText] = useState('');
 
-  const handlePost = () => {
-    if(postText.trim()) {
-        console.log("Posting:", postText);
+  const handlePost = async () => {
+    if(!postText.trim()) return;
+    console.log("Posting:", postText);
 
-        setPostText('');
+    try {
+      await axios.post('http://54.147.244.63:8000/api/post_yeet', {
+        username: user.username,
+        post_content: postText,
+      });
+          
+      setPostText('');
+      if(onPostSuccess) onPostSuccess();
+    } catch (error) {
+      console.error('Error posting Yeet:', error);
     }
-  };
+        
+  }
+
   
-    return (
+  return (
     <View style={styles.card}>
       <Image
         source={user?.picture ? { uri: user?.picture } : require('../../assets/y_logo.png')}
@@ -29,7 +40,6 @@ const PostInput = (user) => {
       <TouchableOpacity onPress={handlePost} style={styles.button}>
         <Text style={styles.buttonText}>Yeet</Text>
       </TouchableOpacity>
-    
     </View>
   );
 };
@@ -46,7 +56,7 @@ const styles = StyleSheet.create({
       shadowOffset: { width: 0, height: 2 },
       shadowRadius: 4,
       elevation: 3,
-      marginBotton: 20,
+      marginBottom: 20,
       alignSelf: 'center',
     },
     avatar: {

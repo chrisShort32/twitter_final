@@ -22,9 +22,10 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
+      <Stack.Navigator mode="card"
         screenOptions={{
           headerShown: false,
+          cardStyle: { flex: 1 }
         }}
       >
         {isAuthenticated ? (
