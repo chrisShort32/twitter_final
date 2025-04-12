@@ -33,7 +33,14 @@ const AppNavigator = () => {
           // User is signed in
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+            <Stack.Screen 
+              name="UserProfile" 
+              component={UserProfileScreen} 
+              options={{
+                gestureEnabled: false,
+                animationEnabled: true
+              }}
+            />
           </>
         ) : (
           // User is not signed in
