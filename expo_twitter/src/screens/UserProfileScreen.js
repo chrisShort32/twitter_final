@@ -31,6 +31,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     setDebugInfo(`Username param: ${username}`);
     
     if (!username) {
+      console.error('[UserProfileScreen] No username provided');
       setError('No username provided. Please try again.');
       setLoading(false);
       return;
@@ -39,6 +40,10 @@ const UserProfileScreen = ({ route, navigation }) => {
     // Fetch user profile data
     fetchUserProfile();
     
+    // Return cleanup function
+    return () => {
+      console.log('[UserProfileScreen] Unmounting for username:', username);
+    };
   }, [username]);
 
   const fetchUserProfile = async () => {

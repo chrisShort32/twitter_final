@@ -62,6 +62,7 @@ const HomeScreen = ({ navigation }) => {
             paddingVertical: 8,
             paddingHorizontal: 15,
             borderRadius: 20,
+            marginBottom: 10
           }}
           onPress={() => {
             console.log('Test navigation to user profile');
@@ -70,6 +71,23 @@ const HomeScreen = ({ navigation }) => {
         >
           <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
             Test Profile Navigation
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={{
+            backgroundColor: '#1DA1F2',
+            paddingVertical: 8,
+            paddingHorizontal: 15,
+            borderRadius: 20,
+          }}
+          onPress={() => {
+            console.log('Navigating to Lucas profile');
+            navigation.navigate('UserProfile', { username: 'lucasb87' });
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+            View Lucas Profile
           </Text>
         </TouchableOpacity>
       </View>

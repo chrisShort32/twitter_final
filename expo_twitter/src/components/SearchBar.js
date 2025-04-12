@@ -51,29 +51,38 @@ const SearchBar = ({ navigation }) => {
     
     // Try both navigation methods to ensure one works
     try {
-      // Method 1: Standard navigation
-      navigation.navigate('UserProfile', { username });
-      console.log('Navigation method 1 attempted');
+      // First clean up search state before navigating
+      setSearching(false);
+      setQuery('');
+      setResults([]);
       
-      // Method 2: Alternative with reset (if method 1 doesn't work)
-      /*
+      // Method 1: Standard navigation with delay to ensure UI updates first
+      setTimeout(() => {
+        console.log('Executing navigation to UserProfile for:', username);
+        navigation.navigate('UserProfile', { username });
+      }, 100);
+      
+      // If first method fails, we'll try this approach
+      if (!navigation.canGoBack) {
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'Home' },
+            { name: 'UserProfile', params: { username } },
+          ],
+        });
+      }
+    } catch (err) {
+      console.error('Navigation error:', err);
+      // Last resort fallback - force navigation
       navigation.reset({
-        index: 1,
+        index: 0,
         routes: [
           { name: 'Home' },
           { name: 'UserProfile', params: { username } },
         ],
       });
-      console.log('Navigation method 2 attempted');
-      */
-    } catch (err) {
-      console.error('Navigation error:', err);
     }
-    
-    // Clean up search state
-    setSearching(false);
-    setQuery('');
-    setResults([]);
   };
 
   const handleCancel = () => {
@@ -123,20 +132,7 @@ const SearchBar = ({ navigation }) => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => {
-                  // Use the most direct navigation method
-                  console.log('User clicked on:', item.username);
-                  navigation.reset({
-                    index: 0,
-                    routes: [
-                      { name: 'Home' }, // Keep Home as the first route
-                      { 
-                        name: 'UserProfile', 
-                        params: { username: item.username }
-                      }
-                    ],
-                  });
-                }}
+                onPress={() => handleUserPress(item.username)}
                 activeOpacity={0.5}
               >
                 <Image
@@ -149,9 +145,12 @@ const SearchBar = ({ navigation }) => {
                     {item.first_name || ''} {item.last_name || ''}
                   </Text>
                 </View>
-                <View style={styles.viewProfileButton}>
+                <TouchableOpacity 
+                  style={styles.viewProfileButton}
+                  onPress={() => handleUserPress(item.username)}
+                >
                   <Text style={styles.viewProfileText}>View Profile</Text>
-                </View>
+                </TouchableOpacity>
               </TouchableOpacity>
             )}
           />
