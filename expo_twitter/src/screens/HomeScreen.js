@@ -93,49 +93,6 @@ const HomeScreen = ({ navigation }) => {
             View Lucas Profile
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={{
-            backgroundColor: 'red',
-            paddingVertical: 8,
-            paddingHorizontal: 15,
-            borderRadius: 20,
-          }}
-          onPress={async () => {
-            console.log('Testing backend API connection for profile');
-            try {
-              // Test API directly
-              const username = 'lucasb87';
-              const response = await getUserProfile(username);
-              
-              console.log('API TEST RESPONSE:', JSON.stringify(response));
-              
-              if (response.success) {
-                Alert.alert('API Test Successful', 
-                  `Found profile for ${username}. Will now navigate...`);
-                  
-                // If successful, navigate after a delay
-                setTimeout(() => {
-                  navigation.navigate('UserProfile', { 
-                    username,
-                    timestamp: new Date().getTime() 
-                  });
-                }, 1000);
-              } else {
-                Alert.alert('API Test Failed', 
-                  `Error: ${response.error || 'Unknown error'}`);
-              }
-            } catch (error) {
-              console.error('Direct API test error:', error);
-              Alert.alert('API Test Exception', 
-                `Error: ${error.message || 'Unknown error'}`);
-            }
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-            Direct API Test
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Post Input */}
