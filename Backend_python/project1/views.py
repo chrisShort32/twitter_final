@@ -259,10 +259,9 @@ def yeet(request):
         username = data.get('username')
         post_content = data.get('post_content')
         user = User.objects.get(username=username)
-        user_id = user.id
 
         Posts.objects.create(
-           user=user_id,
+           user=user,
            content=post_content
         )
         return JsonResponse({'status': 'Yeet successfully Yeeted'}, status=201)

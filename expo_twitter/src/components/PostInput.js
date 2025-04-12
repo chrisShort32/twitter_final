@@ -1,13 +1,15 @@
 import React, {useState} from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
-const PostInput = (user) => {
+import { useAuth } from '../context/AuthContext';
+const PostInput = () => {
+  const {user} = useAuth();
   const [postText, setPostText] = useState('');
 
   const handlePost = async () => {
     if(!postText.trim()) return;
     console.log("Posting:", postText);
-
+    console.log("username: ", user.username);
     try {
       await axios.post('http://54.147.244.63:8000/api/post_yeet/', {
         username: user.username,
