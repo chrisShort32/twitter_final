@@ -261,7 +261,7 @@ def yeet(request):
         data = json.loads(request.body)
         username = data.get('username')
         post_content = data.get('post_content')
-        user = User.object.get(username=username)
+        user = User.objects.get(username=username)
         user_id = user.id
 
         Posts.objects.create(
