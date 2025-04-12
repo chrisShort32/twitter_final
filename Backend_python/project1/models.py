@@ -137,7 +137,7 @@ class Likes(models.Model):
     like_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
     post = models.ForeignKey('Posts', models.DO_NOTHING, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False
@@ -171,7 +171,7 @@ class Retweets(models.Model):
     retweet_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING)
     post = models.ForeignKey(Posts, models.DO_NOTHING)
-    retweet_timestamp = models.DateTimeField(blank=True, null=True)
+    retweet_timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False

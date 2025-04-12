@@ -14,6 +14,8 @@ urlpatterns = [
     path('api/username/<int:user_id>/', views.get_username_by_user_id, name='get-username-by-id'),
     path('api/follow-usernames/<int:follow_id>/', views.get_usernames_for_follow, name='get-follow-usernames'),
     path('api/follow_feed/<str:username>/', views.get_following_feed, name='get_following_feed'),
+    path('api/like_unlike/', views.like_toggle, name='like_toggle'),
+    path('api/reyeet_unreyeet/', views.reyeet_toggle, name='reyeet_toggle'),
     path('api/post_yeet/', views.yeet, name='yeet'),
     path('api/user_posts/<str:username>/', views.get_user_posts, name='get_user_posts'),
 ]
