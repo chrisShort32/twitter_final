@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import Yeet from '../components/Yeet';
 
 const UserProfileScreen = ({ route, navigation }) => {
-  const username = route.params?.username;
+  const username = route?.params?.username;
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,12 +28,25 @@ const UserProfileScreen = ({ route, navigation }) => {
   useEffect(() => {
     console.log('UserProfileScreen mounted with username:', username);
     if (!username) {
-      setError('No username provided');
+      setError('No username provided. Please try again.');
       setLoading(false);
       return;
     }
+    
+    // Fetch user profile data
     fetchUserProfile();
-  }, [username]);
+    
+    // Set up a listener for when this screen comes into focus
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('UserProfileScreen focused with username:', username);
+      if (username) {
+        fetchUserProfile();
+      }
+    });
+    
+    // Clean up the listener when the component unmounts
+    return unsubscribe;
+  }, [navigation, username]);
 
   const fetchUserProfile = async () => {
     setLoading(true);

@@ -26,7 +26,8 @@ const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyle: { flex: 1 }
+          cardStyle: { flex: 1 },
+          animationEnabled: true,
         }}
       >
         {isAuthenticated ? (
@@ -38,7 +39,21 @@ const AppNavigator = () => {
               component={UserProfileScreen} 
               options={{
                 gestureEnabled: false,
-                animationEnabled: true
+                animationEnabled: true,
+                cardStyleInterpolator: ({ current, layouts }) => {
+                  return {
+                    cardStyle: {
+                      transform: [
+                        {
+                          translateX: current.progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [layouts.screen.width, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  };
+                },
               }}
             />
           </>
