@@ -46,12 +46,33 @@ const SearchBar = ({ navigation }) => {
     }
   };
 
-  const handleUserPress = (username) => {
+  const handleProfileNavigation = (username) => {
     console.log('Navigating to profile for:', username);
-    navigation.navigate('UserProfile', { username });
+    
+    // Clear search UI immediately
     setSearching(false);
     setQuery('');
     setResults([]);
+    
+    // Force navigation with a small delay
+    setTimeout(() => {
+      console.log('Executing delayed navigation to:', username);
+      
+      // Force a navigation reset to ensure it works
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'Home' },
+          { 
+            name: 'UserProfile', 
+            params: { 
+              username: username,
+              timestamp: new Date().getTime() 
+            }
+          }
+        ]
+      });
+    }, 100);
   };
 
   const handleCancel = () => {
@@ -95,27 +116,56 @@ const SearchBar = ({ navigation }) => {
 
       {searching && results.length > 0 && (
         <View style={styles.resultsContainer}>
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.id ? item.id.toString() : item.username}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={() => handleUserPress(item.username)}
-              >
-                <Image
-                  source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
-                  style={styles.avatar}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.username}>@{item.username}</Text>
-                  <Text style={styles.name}>
-                    {item.first_name || ''} {item.last_name || ''}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
+          {results.map((item) => (
+            <TouchableOpacity 
+              key={item.id ? item.id.toString() : item.username} 
+              style={styles.resultItem}
+              onPress={() => {
+                console.log('Profile item clicked for:', item.username);
+                
+                // Clear search UI immediately
+                setSearching(false);
+                setQuery('');
+                setResults([]);
+                
+                // Force navigation with a small delay
+                const username = item.username;
+                setTimeout(() => {
+                  console.log('Executing delayed navigation to:', username);
+                  
+                  // Force a navigation reset to ensure it works
+                  navigation.reset({
+                    index: 1,
+                    routes: [
+                      { name: 'Home' },
+                      { 
+                        name: 'UserProfile', 
+                        params: { 
+                          username: username,
+                          timestamp: new Date().getTime() 
+                        }
+                      }
+                    ]
+                  });
+                }, 100);
+              }}
+              activeOpacity={0.5}
+            >
+              <Image
+                source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
+                style={styles.avatar}
+              />
+              <View style={styles.userInfo}>
+                <Text style={styles.username}>@{item.username}</Text>
+                <Text style={styles.name}>
+                  {item.first_name || ''} {item.last_name || ''}
+                </Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Text style={styles.arrowText}>→</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
       )}
 
@@ -188,21 +238,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E1E8ED',
-    borderRadius: 5,
+    borderRadius: 8,
     maxHeight: 300,
-    zIndex: 1000,
-    elevation: 5,
+    zIndex: 10000,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 100,
   },
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
+    backgroundColor: '#FFFFFF',
   },
   avatar: {
     width: 40,
@@ -211,13 +264,35 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 10,
+    flex: 1,
   },
   username: {
     fontWeight: 'bold',
     color: '#1DA1F2',
+    fontSize: 15,
   },
   name: {
     color: '#657786',
+    marginTop: 2,
+  },
+  arrowContainer: {
+    backgroundColor: '#1DA1F2',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  arrowText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   noResultsContainer: {
     padding: 10,
