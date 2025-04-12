@@ -93,6 +93,10 @@ const HomeScreen = ({ navigation }) => {
             View Lucas Profile
           </Text>
         </TouchableOpacity>
+        
+        <Text style={{ color: '#657786', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>
+          You can now search for users above and click on their name to view their profile!
+        </Text>
       </View>
 
       {/* Post Input */}

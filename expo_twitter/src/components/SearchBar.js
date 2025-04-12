@@ -47,80 +47,20 @@ const SearchBar = ({ navigation }) => {
   };
 
   const handleProfileNavigation = (username) => {
-    console.log('Handling profile navigation for:', username);
+    console.log('Navigating to profile for:', username);
     
-    // First hide the search results UI immediately
+    // First clean up search state before navigation
     setSearching(false);
     setQuery('');
     setResults([]);
     
-    // Give time for the UI to update before navigating
+    // Wait for UI to update then navigate
     setTimeout(() => {
-      console.log('Executing profile navigation for:', username);
-      
-      try {
-        // Force reset navigation stack to ensure reliable navigation
-        navigation.reset({
-          index: 1,
-          routes: [
-            { name: 'Home' },
-            { 
-              name: 'UserProfile', 
-              params: { 
-                username: username,
-                timestamp: new Date().getTime() 
-              }
-            },
-          ],
-        });
-      } catch (err) {
-        console.error('Navigation reset error:', err);
-        // Fallback to navigate method
-        navigation.navigate('UserProfile', { 
-          username: username,
-          timestamp: new Date().getTime()
-        });
-      }
-    }, 100);
-  };
-
-  const handleUserPress = (username) => {
-    console.log('Navigating to profile for:', username);
-    
-    // Try both navigation methods to ensure one works
-    try {
-      // First clean up search state before navigating
-      setSearching(false);
-      setQuery('');
-      setResults([]);
-      
-      // Method 1: Standard navigation with delay to ensure UI updates first
-      setTimeout(() => {
-        console.log('Executing navigation to UserProfile for:', username);
-        navigation.navigate('UserProfile', { username });
-      }, 100);
-      
-      // If first method fails, we'll try this approach
-      if (!navigation.canGoBack) {
-        navigation.reset({
-          index: 1,
-          routes: [
-            { name: 'Home' },
-            { name: 'UserProfile', params: { username } },
-          ],
-        });
-      }
-    } catch (err) {
-      console.error('Navigation error:', err);
-      // Last resort fallback - force navigation
-      navigation.reset({
-        index: 0,
-        routes: [
-          { name: 'Home' },
-          { name: 'UserProfile', params: { username } },
-        ],
+      navigation.navigate('UserProfile', { 
+        username: username,
+        timestamp: new Date().getTime() 
       });
-    }
+    }, 100);
   };
 
   const handleCancel = () => {
@@ -165,62 +105,39 @@ const SearchBar = ({ navigation }) => {
       {searching && results.length > 0 && (
         <View style={styles.resultsContainer}>
           {results.map((item) => (
-            <View 
+            <TouchableOpacity 
               key={item.id ? item.id.toString() : item.username} 
               style={styles.resultItem}
+              onPress={() => {
+                console.log('Profile item clicked for:', item.username);
+                
+                // Clear search state first
+                handleCancel();
+                
+                // Navigate after a short delay to ensure the UI updated first
+                setTimeout(() => {
+                  navigation.navigate('UserProfile', { 
+                    username: item.username,
+                    timestamp: new Date().getTime() 
+                  });
+                }, 100);
+              }}
+              activeOpacity={0.7}
             >
               <Image
                 source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
                 style={styles.avatar}
               />
-              <TouchableOpacity 
-                style={styles.userInfo}
-                onPress={() => {
-                  // Use global object to store navigation intent
-                  global._pendingNavigation = {
-                    screen: 'UserProfile',
-                    params: { username: item.username }
-                  };
-                  // Clear search UI
-                  handleCancel();
-                  // Set a timeout to perform the navigation after UI update
-                  setTimeout(() => {
-                    if (global._pendingNavigation) {
-                      const navInfo = global._pendingNavigation;
-                      global._pendingNavigation = null;
-                      navigation.navigate(navInfo.screen, navInfo.params);
-                    }
-                  }, 100);
-                }}
-              >
+              <View style={styles.userInfo}>
                 <Text style={styles.username}>@{item.username}</Text>
                 <Text style={styles.name}>
                   {item.first_name || ''} {item.last_name || ''}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.viewProfileButton}
-                onPress={() => {
-                  // Use global object to store navigation intent
-                  global._pendingNavigation = {
-                    screen: 'UserProfile',
-                    params: { username: item.username }
-                  };
-                  // Clear search UI
-                  handleCancel();
-                  // Set a timeout to perform the navigation after UI update
-                  setTimeout(() => {
-                    if (global._pendingNavigation) {
-                      const navInfo = global._pendingNavigation;
-                      global._pendingNavigation = null;
-                      navigation.navigate(navInfo.screen, navInfo.params);
-                    }
-                  }, 100);
-                }}
-              >
-                <Text style={styles.viewProfileText}>View Profile</Text>
-              </TouchableOpacity>
-            </View>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Text style={styles.arrowText}>→</Text>
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
       )}
@@ -318,13 +235,29 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 10,
+    flex: 1,
   },
   username: {
     fontWeight: 'bold',
     color: '#1DA1F2',
+    fontSize: 15,
   },
   name: {
     color: '#657786',
+    marginTop: 2,
+  },
+  arrowContainer: {
+    backgroundColor: '#E8F5FE',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowText: {
+    fontSize: 16,
+    color: '#1DA1F2',
+    fontWeight: 'bold',
   },
   noResultsContainer: {
     padding: 10,
@@ -341,26 +274,6 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     color: '#657786',
-  },
-  viewProfileButton: {
-    marginLeft: 10,
-    backgroundColor: '#1DA1F2',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    zIndex: 10000,
-    minWidth: 100,
-  },
-  viewProfileText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
-    textAlign: 'center',
   },
 });
 
