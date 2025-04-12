@@ -5,6 +5,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
 import { useAuth } from '../context/AuthContext';
 
 const Stack = createStackNavigator();
@@ -22,7 +23,7 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator mode="card"
+      <Stack.Navigator
         screenOptions={{
           headerShown: false,
           cardStyle: { flex: 1 }
@@ -30,7 +31,10 @@ const AppNavigator = () => {
       >
         {isAuthenticated ? (
           // User is signed in
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+          </>
         ) : (
           // User is not signed in
           <Stack.Screen name="Login" component={LoginScreen} />

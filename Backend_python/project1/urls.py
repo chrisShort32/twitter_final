@@ -17,9 +17,7 @@ urlpatterns = [
     path('api/reyeet_unreyeet/', views.reyeet_toggle, name='reyeet_toggle'),
     path('api/post_yeet/', views.yeet, name='yeet'),
     path('api/user_posts/<str:username>/', views.get_user_posts, name='get_user_posts'),
-    path('api/user_info/', views.get_user_info, name='user_info'),
-    path('api/liked_posts/', views.get_liked_posts, name='liked_posts'),
-    path('api/reyeeted_posts/', views.get_reyeeted_posts, name='reyeeted_posts'),
-    path('api/follow_unfollow/', views.follow_unfollow, name='follow_toggle'),
     path('search_users/', views.search_users, name='search_users'),
+    path('user_profile/<str:username>/', views.user_profile, name='user_profile'),
+    path('follow_toggle/', views.follow_toggle, name='follow_toggle'),
 ]
