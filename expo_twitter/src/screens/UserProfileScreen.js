@@ -16,6 +16,7 @@ import Yeet from '../components/Yeet';
 
 const UserProfileScreen = ({ route, navigation }) => {
   const username = route?.params?.username;
+  const timestamp = route?.params?.timestamp;
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,8 +28,8 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
-    console.log('[UserProfileScreen] Mounted with username:', username);
-    setDebugInfo(`Username param: ${username}`);
+    console.log('[UserProfileScreen] Mounted with username:', username, 'timestamp:', timestamp);
+    setDebugInfo(`Username param: ${username}, Timestamp: ${timestamp || 'none'}`);
     
     if (!username) {
       console.error('[UserProfileScreen] No username provided');
@@ -37,6 +38,11 @@ const UserProfileScreen = ({ route, navigation }) => {
       return;
     }
     
+    // Reset profile state for new username
+    setProfile(null);
+    setLoading(true);
+    setError('');
+    
     // Fetch user profile data
     fetchUserProfile();
     
@@ -44,7 +50,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     return () => {
       console.log('[UserProfileScreen] Unmounting for username:', username);
     };
-  }, [username]);
+  }, [username, timestamp]);
 
   const fetchUserProfile = async () => {
     setLoading(true);

@@ -132,7 +132,20 @@ const SearchBar = ({ navigation }) => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => handleUserPress(item.username)}
+                onPress={() => {
+                  console.log('Direct navigation to profile for:', item.username);
+                  // Use direct navigation without any state cleanup first
+                  navigation.navigate('UserProfile', { 
+                    username: item.username,
+                    timestamp: new Date().getTime() // Force refresh by adding timestamp
+                  });
+                  // Then cleanup search state after navigation
+                  setTimeout(() => {
+                    setSearching(false);
+                    setQuery('');
+                    setResults([]);
+                  }, 300);
+                }}
                 activeOpacity={0.5}
               >
                 <Image
@@ -147,7 +160,20 @@ const SearchBar = ({ navigation }) => {
                 </View>
                 <TouchableOpacity 
                   style={styles.viewProfileButton}
-                  onPress={() => handleUserPress(item.username)}
+                  onPress={() => {
+                    console.log('Direct navigation to profile for:', item.username);
+                    // Use direct navigation without any state cleanup first
+                    navigation.navigate('UserProfile', { 
+                      username: item.username,
+                      timestamp: new Date().getTime() // Force refresh by adding timestamp
+                    });
+                    // Then cleanup search state after navigation
+                    setTimeout(() => {
+                      setSearching(false);
+                      setQuery('');
+                      setResults([]);
+                    }, 300);
+                  }}
                 >
                   <Text style={styles.viewProfileText}>View Profile</Text>
                 </TouchableOpacity>
@@ -277,9 +303,14 @@ const styles = StyleSheet.create({
   viewProfileButton: {
     marginLeft: 'auto',
     backgroundColor: '#1DA1F2',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
   viewProfileText: {
     color: '#FFFFFF',
