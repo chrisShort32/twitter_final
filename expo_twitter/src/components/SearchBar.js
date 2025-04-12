@@ -123,8 +123,21 @@ const SearchBar = ({ navigation }) => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => handleUserPress(item.username)}
-                activeOpacity={0.7}
+                onPress={() => {
+                  // Use the most direct navigation method
+                  console.log('User clicked on:', item.username);
+                  navigation.reset({
+                    index: 0,
+                    routes: [
+                      { name: 'Home' }, // Keep Home as the first route
+                      { 
+                        name: 'UserProfile', 
+                        params: { username: item.username }
+                      }
+                    ],
+                  });
+                }}
+                activeOpacity={0.5}
               >
                 <Image
                   source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
@@ -136,7 +149,9 @@ const SearchBar = ({ navigation }) => {
                     {item.first_name || ''} {item.last_name || ''}
                   </Text>
                 </View>
-                <Text style={styles.viewProfileText}>View Profile</Text>
+                <View style={styles.viewProfileButton}>
+                  <Text style={styles.viewProfileText}>View Profile</Text>
+                </View>
               </TouchableOpacity>
             )}
           />
@@ -260,10 +275,16 @@ const styles = StyleSheet.create({
   noResultsText: {
     color: '#657786',
   },
-  viewProfileText: {
-    color: '#1DA1F2',
-    fontWeight: 'bold',
+  viewProfileButton: {
     marginLeft: 'auto',
+    backgroundColor: '#1DA1F2',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+  },
+  viewProfileText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
     fontSize: 14,
   },
 });

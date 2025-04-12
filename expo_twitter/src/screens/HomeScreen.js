@@ -54,6 +54,26 @@ const HomeScreen = ({ navigation }) => {
         <SearchBar navigation={navigation} />
       </View>
 
+      {/* Test Button for User Profile */}
+      <View style={{ alignItems: 'center', marginBottom: 10 }}>
+        <TouchableOpacity 
+          style={{
+            backgroundColor: '#1DA1F2',
+            paddingVertical: 8,
+            paddingHorizontal: 15,
+            borderRadius: 20,
+          }}
+          onPress={() => {
+            console.log('Test navigation to user profile');
+            navigation.navigate('UserProfile', { username: 'shenderson88' });
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+            Test Profile Navigation
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Post Input */}
       <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
         <PostInput user={user} onPostSuccess={handlePostSuccess} />
