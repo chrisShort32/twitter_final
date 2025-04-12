@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   FlatList,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { getUserProfile, toggleFollow } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
@@ -82,9 +83,19 @@ const UserProfileScreen = ({ route, navigation }) => {
         ]
       };
       
-      // Try to get real data from API
-      const response = await getUserProfile(username);
-      setDebugInfo(prev => `${prev}\nAPI response received`);
+      // Add timeout protection in case API never responds
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
+      );
+      
+      // Race the actual API call with the timeout
+      const response = await Promise.race([
+        getUserProfile(username),
+        timeoutPromise
+      ]);
+      
+      console.log('[UserProfileScreen] Response received:', JSON.stringify(response));
+      setDebugInfo(prev => `${prev}\nAPI Response: ${JSON.stringify(response)}`);
       
       if (response.success && response.profile) {
         console.log('[UserProfileScreen] Profile data received:', response.profile);
@@ -98,6 +109,14 @@ const UserProfileScreen = ({ route, navigation }) => {
       } else {
         console.error('[UserProfileScreen] Profile fetch error:', response.error);
         setDebugInfo(prev => `${prev}\nError: ${response.error || 'Unknown error'}`);
+        setError(`Could not load profile: ${response.error || 'Unknown error'}`);
+        
+        // Alert the user about the problem
+        Alert.alert(
+          'Profile Error',
+          `Could not load profile for ${username}: ${response.error || 'Unknown error'}`,
+          [{ text: 'OK' }]
+        );
         
         // For testing, use mock data instead of showing error
         console.log('[UserProfileScreen] Using mock profile data');
@@ -109,7 +128,14 @@ const UserProfileScreen = ({ route, navigation }) => {
     } catch (err) {
       console.error("[UserProfileScreen] Profile fetch error:", err);
       setDebugInfo(prev => `${prev}\nException: ${err.message}`);
-      setError('An error occurred while fetching the profile');
+      setError(`An error occurred while fetching the profile: ${err.message}`);
+      
+      // Alert the user about the problem
+      Alert.alert(
+        'Profile Error',
+        `Could not load profile for ${username}: ${err.message}`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }

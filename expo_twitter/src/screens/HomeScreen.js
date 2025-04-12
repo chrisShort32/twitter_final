@@ -7,12 +7,14 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import PostInput from '../components/PostInput';
 import FollowingFeed from '../components/FollowingFeed';
 import MyPostsFeed from '../components/myPostsFeed';
 import SearchBar from '../components/SearchBar';
+import { getUserProfile } from '../api/authApi';
 
 const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
@@ -80,6 +82,7 @@ const HomeScreen = ({ navigation }) => {
             paddingVertical: 8,
             paddingHorizontal: 15,
             borderRadius: 20,
+            marginBottom: 10
           }}
           onPress={() => {
             console.log('Navigating to Lucas profile');
@@ -88,6 +91,49 @@ const HomeScreen = ({ navigation }) => {
         >
           <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
             View Lucas Profile
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={{
+            backgroundColor: 'red',
+            paddingVertical: 8,
+            paddingHorizontal: 15,
+            borderRadius: 20,
+          }}
+          onPress={async () => {
+            console.log('Testing backend API connection for profile');
+            try {
+              // Test API directly
+              const username = 'lucasb87';
+              const response = await getUserProfile(username);
+              
+              console.log('API TEST RESPONSE:', JSON.stringify(response));
+              
+              if (response.success) {
+                Alert.alert('API Test Successful', 
+                  `Found profile for ${username}. Will now navigate...`);
+                  
+                // If successful, navigate after a delay
+                setTimeout(() => {
+                  navigation.navigate('UserProfile', { 
+                    username,
+                    timestamp: new Date().getTime() 
+                  });
+                }, 1000);
+              } else {
+                Alert.alert('API Test Failed', 
+                  `Error: ${response.error || 'Unknown error'}`);
+              }
+            } catch (error) {
+              console.error('Direct API test error:', error);
+              Alert.alert('API Test Exception', 
+                `Error: ${error.message || 'Unknown error'}`);
+            }
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+            Direct API Test
           </Text>
         </TouchableOpacity>
       </View>

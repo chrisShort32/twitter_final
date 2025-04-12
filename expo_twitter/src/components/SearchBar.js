@@ -168,42 +168,42 @@ const SearchBar = ({ navigation }) => {
             data={results}
             keyExtractor={(item) => item.id ? item.id.toString() : item.username}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={() => {
-                  console.log('Result item pressed for:', item.username);
-                  // This will only trigger if the View Profile button wasn't clicked
-                  if (!item._viewProfileButtonPressed) {
-                    handleProfileNavigation(item.username);
-                  }
-                }}
-                activeOpacity={0.7}
-              >
-                <Image
-                  source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
-                  style={styles.avatar}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.username}>@{item.username}</Text>
-                  <Text style={styles.name}>
-                    {item.first_name || ''} {item.last_name || ''}
-                  </Text>
+              <View style={styles.resultItem}>
+                <View style={styles.resultItemContent}>
+                  <Image
+                    source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
+                    style={styles.avatar}
+                  />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.username}>@{item.username}</Text>
+                    <Text style={styles.name}>
+                      {item.first_name || ''} {item.last_name || ''}
+                    </Text>
+                  </View>
                 </View>
                 <TouchableOpacity 
                   style={styles.viewProfileButton}
-                  onPress={(event) => {
-                    // Prevent event bubbling
-                    event.stopPropagation();
-                    console.log('View Profile button pressed for:', item.username);
-                    // Set a flag to prevent double navigation
-                    item._viewProfileButtonPressed = true;
-                    handleProfileNavigation(item.username);
+                  onPress={() => {
+                    // Simple direct approach
+                    console.log('Direct profile button press for:', item.username);
+                    
+                    // Clear search state
+                    setSearching(false);
+                    setQuery('');
+                    setResults([]);
+                    
+                    // Navigate after a brief timeout
+                    setTimeout(() => {
+                      navigation.navigate('UserProfile', { 
+                        username: item.username,
+                        timestamp: new Date().getTime()
+                      });
+                    }, 50);
                   }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Text style={styles.viewProfileText}>View Profile</Text>
                 </TouchableOpacity>
-              </TouchableOpacity>
+              </View>
             )}
           />
         </View>
@@ -290,10 +290,16 @@ const styles = StyleSheet.create({
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
     backgroundColor: '#FFFFFF',
+  },
+  resultItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   avatar: {
     width: 40,
