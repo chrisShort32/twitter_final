@@ -46,6 +46,44 @@ const SearchBar = ({ navigation }) => {
     }
   };
 
+  const handleProfileNavigation = (username) => {
+    console.log('Handling profile navigation for:', username);
+    
+    // First hide the search results UI immediately
+    setSearching(false);
+    setQuery('');
+    setResults([]);
+    
+    // Give time for the UI to update before navigating
+    setTimeout(() => {
+      console.log('Executing profile navigation for:', username);
+      
+      try {
+        // Force reset navigation stack to ensure reliable navigation
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'Home' },
+            { 
+              name: 'UserProfile', 
+              params: { 
+                username: username,
+                timestamp: new Date().getTime() 
+              }
+            },
+          ],
+        });
+      } catch (err) {
+        console.error('Navigation reset error:', err);
+        // Fallback to navigate method
+        navigation.navigate('UserProfile', { 
+          username: username,
+          timestamp: new Date().getTime()
+        });
+      }
+    }, 100);
+  };
+
   const handleUserPress = (username) => {
     console.log('Navigating to profile for:', username);
     
@@ -133,20 +171,13 @@ const SearchBar = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.resultItem}
                 onPress={() => {
-                  console.log('Direct navigation to profile for:', item.username);
-                  // Use direct navigation without any state cleanup first
-                  navigation.navigate('UserProfile', { 
-                    username: item.username,
-                    timestamp: new Date().getTime() // Force refresh by adding timestamp
-                  });
-                  // Then cleanup search state after navigation
-                  setTimeout(() => {
-                    setSearching(false);
-                    setQuery('');
-                    setResults([]);
-                  }, 300);
+                  console.log('Result item pressed for:', item.username);
+                  // This will only trigger if the View Profile button wasn't clicked
+                  if (!item._viewProfileButtonPressed) {
+                    handleProfileNavigation(item.username);
+                  }
                 }}
-                activeOpacity={0.5}
+                activeOpacity={0.7}
               >
                 <Image
                   source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
@@ -160,20 +191,15 @@ const SearchBar = ({ navigation }) => {
                 </View>
                 <TouchableOpacity 
                   style={styles.viewProfileButton}
-                  onPress={() => {
-                    console.log('Direct navigation to profile for:', item.username);
-                    // Use direct navigation without any state cleanup first
-                    navigation.navigate('UserProfile', { 
-                      username: item.username,
-                      timestamp: new Date().getTime() // Force refresh by adding timestamp
-                    });
-                    // Then cleanup search state after navigation
-                    setTimeout(() => {
-                      setSearching(false);
-                      setQuery('');
-                      setResults([]);
-                    }, 300);
+                  onPress={(event) => {
+                    // Prevent event bubbling
+                    event.stopPropagation();
+                    console.log('View Profile button pressed for:', item.username);
+                    // Set a flag to prevent double navigation
+                    item._viewProfileButtonPressed = true;
+                    handleProfileNavigation(item.username);
                   }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Text style={styles.viewProfileText}>View Profile</Text>
                 </TouchableOpacity>
@@ -303,19 +329,21 @@ const styles = StyleSheet.create({
   viewProfileButton: {
     marginLeft: 'auto',
     backgroundColor: '#1DA1F2',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 20,
-    elevation: 3,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    zIndex: 10000,
   },
   viewProfileText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
+    textAlign: 'center',
   },
 });
 
