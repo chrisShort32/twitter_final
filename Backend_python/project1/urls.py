@@ -16,5 +16,8 @@ urlpatterns = [
     path('api/like_unlike/', views.like_toggle, name='like_toggle'),
     path('api/reyeet_unreyeet/', views.reyeet_toggle, name='reyeet_toggle'),
     path('api/post_yeet/', views.yeet, name='yeet'),
-
+    path('api/user_posts/<str:username>/', views.get_user_posts, name='get_user_posts'),
+    path('search_users/', views.search_users, name='search_users'),
+    path('user_profile/<str:username>/', views.user_profile, name='user_profile'),
+    path('follow_toggle/', views.follow_toggle, name='follow_toggle'),
 ]

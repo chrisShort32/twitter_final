@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from django.db import models
+from django.utils import timezone
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -298,3 +299,176 @@ def reyeet_toggle(request):
             return JsonResponse({'status': 'Yeet has been ReYeeted'}, status=201)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User does not exist'}, status=404)
+
+# Final - Search for users by username
+@api_view(['GET'])
+def search_users(request):
+    query = request.GET.get('query', '')
+    if not query:
+        return Response({'error': 'Query parameter required'}, status=400)
+    
+    try:
+        # Find users whose username or name contains the query string
+        users = User.objects.filter(
+            models.Q(username__icontains=query) | 
+            models.Q(first_name__icontains=query) | 
+            models.Q(last_name__icontains=query)
+        )[:10]  # Limit to 10 results
+        
+        user_data = []
+        for user in users:
+            user_data.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                # You could add more user info here if needed
+            })
+        
+        return Response(user_data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+# Final - Get user profile by username
+@api_view(['GET'])
+def user_profile(request, username):
+    try:
+        # Get the requested user
+        profile_user = User.objects.get(username=username)
+        
+        # Get the current logged-in user
+        current_user = request.user
+        
+        # Check if current user follows this profile
+        is_following = False
+        if current_user.is_authenticated:
+            is_following = Follows.objects.filter(
+                user_id=current_user.id,
+                following_user_id=profile_user.id
+            ).exists()
+        
+        # Get followers count
+        followers_count = Follows.objects.filter(following_user_id=profile_user.id).count()
+        
+        # Get following count
+        following_count = Follows.objects.filter(user_id=profile_user.id).count()
+        
+        # Get user posts
+        posts = Posts.objects.filter(user_id=profile_user.id).order_by('-created_at')
+        posts_data = []
+        
+        for post in posts:
+            post_data = {
+                'post_id': post.post_id,
+                'user_id': profile_user.id,
+                'username': profile_user.username,
+                'post_content': post.content,
+                'post_timestamp': post.created_at,
+                **get_like_data(post.post_id, current_user.id if current_user.is_authenticated else None),
+                **get_retweet_data(post.post_id, current_user.id if current_user.is_authenticated else None),
+            }
+            posts_data.append(post_data)
+        
+        # Get liked posts
+        liked_posts_data = []
+        if current_user.is_authenticated:
+            likes = Likes.objects.filter(user_id=profile_user.id)
+            for like in likes:
+                post = like.post
+                if post:
+                    post_user = post.user
+                    liked_post_data = {
+                        'post_id': post.post_id,
+                        'user_id': post_user.id,
+                        'username': post_user.username,
+                        'post_content': post.content,
+                        'post_timestamp': post.created_at,
+                        **get_like_data(post.post_id, current_user.id),
+                        **get_retweet_data(post.post_id, current_user.id),
+                    }
+                    liked_posts_data.append(liked_post_data)
+        
+        # Get retweeted posts
+        retweeted_posts_data = []
+        if current_user.is_authenticated:
+            retweets = Retweets.objects.filter(user_id=profile_user.id)
+            for retweet in retweets:
+                post = retweet.post
+                if post:
+                    post_user = post.user
+                    retweeted_post_data = {
+                        'post_id': post.post_id,
+                        'user_id': post_user.id,
+                        'username': post_user.username,
+                        'post_content': post.content,
+                        'post_timestamp': post.created_at,
+                        **get_like_data(post.post_id, current_user.id),
+                        **get_retweet_data(post.post_id, current_user.id),
+                    }
+                    retweeted_posts_data.append(retweeted_post_data)
+        
+        # Build the profile data
+        profile_data = {
+            'id': profile_user.id,
+            'username': profile_user.username,
+            'first_name': profile_user.first_name,
+            'last_name': profile_user.last_name,
+            'email': profile_user.email,
+            'date_joined': profile_user.date_joined,
+            'is_following': is_following,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'posts_count': posts.count(),
+            'posts': posts_data,
+            'liked_posts': liked_posts_data,
+            'retweeted_posts': retweeted_posts_data,
+        }
+        
+        return Response(profile_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+# Final - Toggle follow status for a user
+@api_view(['POST'])
+def follow_toggle(request):
+    following_username = request.data.get('username')
+    
+    if not following_username:
+        return Response({'error': 'Username is required'}, status=400)
+    
+    try:
+        # Get the current user
+        user = request.user
+        
+        # Get the user to follow/unfollow
+        following_user = User.objects.get(username=following_username)
+        
+        # Check if already following
+        follow_relationship = Follows.objects.filter(
+            user_id=user.id, 
+            following_user_id=following_user.id
+        )
+        
+        if follow_relationship.exists():
+            # Unfollow
+            follow_relationship.delete()
+            return Response({'status': 'unfollowed'})
+        else:
+            # Follow
+            new_follow = Follows.objects.create(
+                user_id=user.id,
+                following_user_id=following_user.id,
+                created_at=timezone.now()
+            )
+            return Response({'status': 'followed'})
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+
+        

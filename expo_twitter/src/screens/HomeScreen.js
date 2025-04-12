@@ -12,8 +12,9 @@ import { useAuth } from '../context/AuthContext';
 import PostInput from '../components/PostInput';
 import FollowingFeed from '../components/FollowingFeed';
 import MyPostsFeed from '../components/myPostsFeed';
+import SearchBar from '../components/SearchBar';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
   const [activeTab, setActiveTab] = useState('following');
   const [refreshTrigger, setRefreshTrigger] = useState(0);  
@@ -46,6 +47,11 @@ const HomeScreen = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
+        <SearchBar navigation={navigation} />
       </View>
 
       {/* Post Input */}

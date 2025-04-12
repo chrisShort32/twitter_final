@@ -106,12 +106,20 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Twitter',
-	'USER': 'djangouser',
-	'PASSWORD': 'Tooshort32!',
-	'HOST': 'localhost',
-	'PORT': '3306',
+        'USER': 'djangouser',
+        'PASSWORD': 'Tooshort32!',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
+
+# SQLite configuration for local development if needed
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Password validation
@@ -163,7 +171,19 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
     'http://54.147.244.63:8081',
     'http://group3twitter.hopto.org:8081',
+    'http://localhost:19006',  # Expo web
+    'http://localhost:19000',  # Expo app
+    'http://localhost:19001',  # Expo app
+    'http://localhost:19002',  # Expo DevTools
+    'http://localhost:8082',   # Expo alternative port
+    'http://127.0.0.1:19006',
+    'exp://localhost:19000',
+    'exp://127.0.0.1:19000',
 ]
+
+# Also allow any origins in development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
