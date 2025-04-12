@@ -164,48 +164,64 @@ const SearchBar = ({ navigation }) => {
 
       {searching && results.length > 0 && (
         <View style={styles.resultsContainer}>
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.id ? item.id.toString() : item.username}
-            renderItem={({ item }) => (
-              <View style={styles.resultItem}>
-                <View style={styles.resultItemContent}>
-                  <Image
-                    source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
-                    style={styles.avatar}
-                  />
-                  <View style={styles.userInfo}>
-                    <Text style={styles.username}>@{item.username}</Text>
-                    <Text style={styles.name}>
-                      {item.first_name || ''} {item.last_name || ''}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity 
-                  style={styles.viewProfileButton}
-                  onPress={() => {
-                    // Simple direct approach
-                    console.log('Direct profile button press for:', item.username);
-                    
-                    // Clear search state
-                    setSearching(false);
-                    setQuery('');
-                    setResults([]);
-                    
-                    // Navigate after a brief timeout
-                    setTimeout(() => {
-                      navigation.navigate('UserProfile', { 
-                        username: item.username,
-                        timestamp: new Date().getTime()
-                      });
-                    }, 50);
-                  }}
-                >
-                  <Text style={styles.viewProfileText}>View Profile</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
+          {results.map((item) => (
+            <View 
+              key={item.id ? item.id.toString() : item.username} 
+              style={styles.resultItem}
+            >
+              <Image
+                source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
+                style={styles.avatar}
+              />
+              <TouchableOpacity 
+                style={styles.userInfo}
+                onPress={() => {
+                  // Use global object to store navigation intent
+                  global._pendingNavigation = {
+                    screen: 'UserProfile',
+                    params: { username: item.username }
+                  };
+                  // Clear search UI
+                  handleCancel();
+                  // Set a timeout to perform the navigation after UI update
+                  setTimeout(() => {
+                    if (global._pendingNavigation) {
+                      const navInfo = global._pendingNavigation;
+                      global._pendingNavigation = null;
+                      navigation.navigate(navInfo.screen, navInfo.params);
+                    }
+                  }, 100);
+                }}
+              >
+                <Text style={styles.username}>@{item.username}</Text>
+                <Text style={styles.name}>
+                  {item.first_name || ''} {item.last_name || ''}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.viewProfileButton}
+                onPress={() => {
+                  // Use global object to store navigation intent
+                  global._pendingNavigation = {
+                    screen: 'UserProfile',
+                    params: { username: item.username }
+                  };
+                  // Clear search UI
+                  handleCancel();
+                  // Set a timeout to perform the navigation after UI update
+                  setTimeout(() => {
+                    if (global._pendingNavigation) {
+                      const navInfo = global._pendingNavigation;
+                      global._pendingNavigation = null;
+                      navigation.navigate(navInfo.screen, navInfo.params);
+                    }
+                  }, 100);
+                }}
+              >
+                <Text style={styles.viewProfileText}>View Profile</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
         </View>
       )}
 
@@ -290,16 +306,10 @@ const styles = StyleSheet.create({
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
     backgroundColor: '#FFFFFF',
-  },
-  resultItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
   },
   avatar: {
     width: 40,
@@ -333,17 +343,18 @@ const styles = StyleSheet.create({
     color: '#657786',
   },
   viewProfileButton: {
-    marginLeft: 'auto',
+    marginLeft: 10,
     backgroundColor: '#1DA1F2',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    elevation: 4,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.5,
     shadowRadius: 3,
     zIndex: 10000,
+    minWidth: 100,
   },
   viewProfileText: {
     color: '#FFFFFF',
