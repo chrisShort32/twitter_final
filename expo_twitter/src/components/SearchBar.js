@@ -49,18 +49,18 @@ const SearchBar = ({ navigation }) => {
   const handleProfileNavigation = (username) => {
     console.log('Navigating to profile for:', username);
     
-    // First clean up search state before navigation
-    setSearching(false);
-    setQuery('');
-    setResults([]);
+    // First navigate directly
+    navigation.navigate('UserProfile', { 
+      username: username,
+      timestamp: new Date().getTime() 
+    });
     
-    // Wait for UI to update then navigate
+    // Then clean up search state after navigation
     setTimeout(() => {
-      navigation.navigate('UserProfile', { 
-        username: username,
-        timestamp: new Date().getTime() 
-      });
-    }, 100);
+      setSearching(false);
+      setQuery('');
+      setResults([]);
+    }, 50);
   };
 
   const handleCancel = () => {
@@ -111,18 +111,20 @@ const SearchBar = ({ navigation }) => {
               onPress={() => {
                 console.log('Profile item clicked for:', item.username);
                 
-                // Clear search state first
-                handleCancel();
+                // First navigate directly
+                navigation.navigate('UserProfile', { 
+                  username: item.username,
+                  timestamp: new Date().getTime() 
+                });
                 
-                // Navigate after a short delay to ensure the UI updated first
+                // Then clear search state after navigation is triggered
                 setTimeout(() => {
-                  navigation.navigate('UserProfile', { 
-                    username: item.username,
-                    timestamp: new Date().getTime() 
-                  });
-                }, 100);
+                  setSearching(false);
+                  setQuery('');
+                  setResults([]);
+                }, 50);
               }}
-              activeOpacity={0.7}
+              activeOpacity={0.6}
             >
               <Image
                 source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
@@ -211,14 +213,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E1E8ED',
-    borderRadius: 5,
+    borderRadius: 8,
     maxHeight: 300,
     zIndex: 9999,
-    elevation: 5,
+    elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    overflow: 'hidden',
   },
   resultItem: {
     flexDirection: 'row',
@@ -247,16 +250,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   arrowContainer: {
-    backgroundColor: '#E8F5FE',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    backgroundColor: '#1DA1F2',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    elevation: 2,
   },
   arrowText: {
-    fontSize: 16,
-    color: '#1DA1F2',
+    fontSize: 18,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   noResultsContainer: {
