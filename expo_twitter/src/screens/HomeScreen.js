@@ -42,17 +42,26 @@ const HomeScreen = ({ navigation }) => {
       <ScrollView>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Edit Profile</Text>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => {
+            console.log('Navigating to my profile');
+            navigation.navigate('UserProfile', { 
+              username: user.username,
+              timestamp: new Date().getTime() 
+            });
+          }}
+        >
+          <Text style={styles.buttonText}>My Profile</Text>
         </TouchableOpacity>
         <Image source={require('../../assets/y_logo.png')} style={styles.logo} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
-      <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
+      <View style={{ paddingHorizontal: 15, marginBottom: 50 }}>
         <SearchBar navigation={navigation} />
       </View>
 
@@ -124,7 +133,14 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     width: 90,
   },
-  logoutText: {
+  profileButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#1DA1F2',
+    borderRadius: 15,
+    width: 90,
+  },
+  buttonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 12,
