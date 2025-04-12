@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/liked_posts/', views.get_liked_posts, name='liked_posts'),
     path('api/reyeeted_posts/', views.get_reyeeted_posts, name='reyeeted_posts'),
     path('api/follow_unfollow/', views.follow_unfollow, name='follow_toggle'),
+    path('search_users/', views.search_users, name='search_users'),
 ]

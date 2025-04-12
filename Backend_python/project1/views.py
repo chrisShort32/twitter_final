@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from django.core.exceptions import ObjectDoesNotExist
 import json
+from django.db import models
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -384,4 +385,32 @@ def follow_unfollow(request):
     except User.DoesNotExist:
         return JsonResponse({'error': 'User does not exist'}, status=404)
 
+# Final - Search for users by username
+@api_view(['GET'])
+def search_users(request):
+    query = request.GET.get('query', '')
+    if not query:
+        return Response({'error': 'Query parameter required'}, status=400)
+    
+    try:
+        # Find users whose username or name contains the query string
+        users = User.objects.filter(
+            models.Q(username__icontains=query) | 
+            models.Q(first_name__icontains=query) | 
+            models.Q(last_name__icontains=query)
+        )[:10]  # Limit to 10 results
         
+        user_data = []
+        for user in users:
+            user_data.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                # You could add more user info here if needed
+            })
+        
+        return Response(user_data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
