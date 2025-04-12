@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import UserInfoView, PostInfoView, AllUsersView, AllFollowsView
+from .views import PostInfoView, AllUsersView, AllFollowsView
 urlpatterns = [
     path('all_users/', views.all_users, name='all_users'),
     path('check_user/', views.check_user_exists, name='check_user'),
