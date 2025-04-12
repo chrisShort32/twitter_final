@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   textInput: {
     height: 50,
     flex: 1,
-    padding: 20,
+    padding: 10,
     paddingLeft: 20,
     textAlignVertical: 'center',
     color: '#14171A',
