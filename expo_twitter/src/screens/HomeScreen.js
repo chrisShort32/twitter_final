@@ -43,7 +43,7 @@ const HomeScreen = () => {
 
       {/* Post Input */}
       <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
-        <PostInput user={user} />
+        <PostInput user={user} onPostSuccess={handlePostSuccess} />
       </View>
 
       {/* Tab Buttons */}

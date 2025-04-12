@@ -243,7 +243,7 @@ def get_user_posts(request, username):
                 'username': user.username,
                 'post_id': post.post_id,
                 'post_content': post.content,
-                'post_timestampt': post.created_at,
+                'post_timestamp': post.created_at,
                 **get_like_data(post.post_id, user.id),
                 **get_retweet_data(post.post_id, user.id)
             })
