@@ -22,7 +22,6 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [debugInfo, setDebugInfo] = useState('');
   const [activeTab, setActiveTab] = useState('posts');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
@@ -30,7 +29,6 @@ const UserProfileScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     console.log('[UserProfileScreen] Mounted with username:', username, 'timestamp:', timestamp);
-    setDebugInfo(`Username param: ${username}, Timestamp: ${timestamp || 'none'}`);
     
     if (!username) {
       console.error('[UserProfileScreen] No username provided');
@@ -59,7 +57,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     
     try {
       console.log('[UserProfileScreen] Fetching profile for:', username);
-      setDebugInfo(prev => `${prev}\nFetching data for: ${username}`);
       
       // Create mock profile data if needed for testing
       const mockProfile = {
@@ -95,11 +92,9 @@ const UserProfileScreen = ({ route, navigation }) => {
       ]);
       
       console.log('[UserProfileScreen] Response received:', JSON.stringify(response));
-      setDebugInfo(prev => `${prev}\nAPI Response: ${JSON.stringify(response)}`);
       
       if (response.success && response.profile) {
         console.log('[UserProfileScreen] Profile data received:', response.profile);
-        setDebugInfo(prev => `${prev}\nProfile data loaded successfully`);
         setProfile(response.profile);
         
         // Make sure these property names match what your backend returns
@@ -108,7 +103,6 @@ const UserProfileScreen = ({ route, navigation }) => {
         setFollowingCount(response.profile.following_count || 0);
       } else {
         console.error('[UserProfileScreen] Profile fetch error:', response.error);
-        setDebugInfo(prev => `${prev}\nError: ${response.error || 'Unknown error'}`);
         setError(`Could not load profile: ${response.error || 'Unknown error'}`);
         
         // Alert the user about the problem
@@ -120,14 +114,12 @@ const UserProfileScreen = ({ route, navigation }) => {
         
         // For testing, use mock data instead of showing error
         console.log('[UserProfileScreen] Using mock profile data');
-        setDebugInfo(prev => `${prev}\nUsing mock profile data`);
         setProfile(mockProfile);
         setFollowersCount(mockProfile.followers_count);
         setFollowingCount(mockProfile.following_count);
       }
     } catch (err) {
       console.error("[UserProfileScreen] Profile fetch error:", err);
-      setDebugInfo(prev => `${prev}\nException: ${err.message}`);
       setError(`An error occurred while fetching the profile: ${err.message}`);
       
       // Alert the user about the problem
@@ -168,7 +160,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1DA1F2" />
-        <Text style={styles.debugText}>{debugInfo}</Text>
       </View>
     );
   }
@@ -177,7 +168,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.debugText}>{debugInfo}</Text>
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
@@ -189,7 +179,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>User not found</Text>
-        <Text style={styles.debugText}>{debugInfo}</Text>
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
@@ -207,8 +196,7 @@ const UserProfileScreen = ({ route, navigation }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView>
-        {debugInfo && <Text style={styles.debugText}>{debugInfo}</Text>}
+      <ScrollView style={styles.container}>
         <View style={styles.headerContainer}>
           <Text style={styles.nameText}>{profile.first_name} {profile.last_name}</Text>
           <Text style={styles.usernameText}>@{profile.username}</Text>
@@ -274,17 +262,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#FFFFFF',
   },
   errorText: {
     color: '#FF0000',
     marginBottom: 20,
     textAlign: 'center',
+    fontSize: 16,
   },
   button: {
     paddingVertical: 10,
@@ -370,16 +361,6 @@ const styles = StyleSheet.create({
   emptyPostsText: {
     fontSize: 16,
     color: '#657786',
-  },
-  debugText: {
-    color: 'red',
-    padding: 10,
-    margin: 5,
-    backgroundColor: '#f8f8f8',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    fontSize: 12,
   },
 });
 
