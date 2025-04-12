@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 from django.core.exceptions import ObjectDoesNotExist
+import json
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -254,8 +255,9 @@ def get_user_posts(request, username):
 @api_view(['POST'])
 def yeet(request):
     try:
-        username = request.get('username')
-        post_content = request.get('post_content')
+        data = json.loads(request.body)
+        username = data.get('username')
+        post_content = data.get('post_content')
         user = User.object.get(username=username)
         user_id = user.id
 

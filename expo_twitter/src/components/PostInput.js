@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
-
+import axios from 'axios';
 const PostInput = (user) => {
   const [postText, setPostText] = useState('');
 
@@ -9,7 +9,7 @@ const PostInput = (user) => {
     console.log("Posting:", postText);
 
     try {
-      await axios.post('http://54.147.244.63:8000/api/post_yeet', {
+      await axios.post('http://54.147.244.63:8000/api/post_yeet/', {
         username: user.username,
         post_content: postText,
       });
