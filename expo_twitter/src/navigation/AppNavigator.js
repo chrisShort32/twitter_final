@@ -26,14 +26,38 @@ const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyle: { flex: 1 }
+          cardStyle: { flex: 1 },
+          animationEnabled: true,
         }}
       >
         {isAuthenticated ? (
           // User is signed in
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+            <Stack.Screen 
+              name="UserProfile" 
+              component={UserProfileScreen} 
+              options={{
+                gestureEnabled: false,
+                animationEnabled: true,
+                detachPreviousScreen: false,
+                presentation: 'card',
+                cardStyleInterpolator: ({ current, layouts }) => {
+                  return {
+                    cardStyle: {
+                      transform: [
+                        {
+                          translateX: current.progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [layouts.screen.width, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  };
+                },
+              }}
+            />
           </>
         ) : (
           // User is not signed in

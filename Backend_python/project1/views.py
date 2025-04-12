@@ -148,6 +148,9 @@ def check_user_exists(request):
         print(user.username, user.email)
         user_data = {
             'exists': True,
+	    'username': user.username,
+	    'email': user.email,
+    	    'first_name': user.first_name,
             'username': user.username,
             'email': user.email,
             'first_name': user.first_name,
