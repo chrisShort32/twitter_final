@@ -146,7 +146,7 @@ class Likes(models.Model):
 
 class Posts(models.Model):
     post_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(blank=True, null=True)
