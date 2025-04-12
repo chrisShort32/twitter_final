@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-const PostInput = () => {
+const PostInput = ({onPostSuccess}) => {
   const {user} = useAuth();
   const [postText, setPostText] = useState('');
 
