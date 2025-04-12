@@ -1,7 +1,33 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-
+import { useAuth } from '../context/AuthContext';
 const Yeet = ({ item }) => {
+  const {user} = useAuth();
+
+  const handleReYeet = async () => {
+    try {
+      await axios.post('http://54.147.244.63:8000/api/reyeet_unreyeet/', {
+        username: user.username,
+        post_id: item.post_id,
+      });
+      if(onReYeetSuccess) onReYeetSuccess();
+    } catch (error) {
+      console.error('Error reYeeting:', error);
+    }
+  };
+  
+  const handleLike = async () => {
+      try {
+        await axios.post('http://54.147.244.63:8000/api/like_unlike/', {
+          username: user.username,
+          post_id: item.post_id,
+        });
+        if(onLikeSuccess) onLikeSuccess();
+      } catch (error) {
+        console.error('Error Liking Yeet:', error);
+      }
+
+  };
   return (
     <View style={styles.post}>
       <Text style={styles.username}>@{item.username}</Text>
@@ -9,7 +35,7 @@ const Yeet = ({ item }) => {
       <Text style={styles.content}>{new Date(item.post_timestamp).toLocaleString()}</Text>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
           <Image
             source={
               item.liked_by_user
@@ -21,7 +47,7 @@ const Yeet = ({ item }) => {
           <Text style={styles.actionText}>{item.like_count}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleReYeet}>
           <Image
             source={
               item.retweeted_by_user
@@ -29,6 +55,7 @@ const Yeet = ({ item }) => {
                 : require('../../assets/retweet.png')
             }
             style={styles.icon}
+            
           />
           <Text style={styles.actionText}>{item.retweet_count}</Text>
         </TouchableOpacity>

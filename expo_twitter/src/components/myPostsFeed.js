@@ -33,7 +33,11 @@ const MyPostsFeed = ({refreshTrigger }) => {
             data={myPosts} 
             keyExtractor={item => item.post_id.toString()}
             renderItem={({ item }) => (
-                <Yeet item={item}/>
+                <Yeet 
+                    item={item} 
+                    onLikeSuccess={onLikeSuccess} 
+                    onReYeetSuccess={onReYeetSuccess}
+                />
             )}
         />
             

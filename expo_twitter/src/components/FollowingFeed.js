@@ -33,7 +33,11 @@ const FollowingFeed = ({ refreshTrigger }) => {
             data={posts} 
             keyExtractor={item => item.post_id.toString()}
             renderItem={({ item }) => (
-            <Yeet item={item}/>
+            <Yeet
+                item={item}
+                onLikeSuccess={onLikeSuccess}
+                onReYeetSuccess={onReYeetSuccess}
+            />
         )}
             
         contentContainerStyle={{ paddingBottom: 120 }}

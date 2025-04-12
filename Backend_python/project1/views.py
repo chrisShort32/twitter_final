@@ -270,6 +270,45 @@ def yeet(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+# Final - Like or Unlike a Post
+@api_view(['POST'])
+def like_toggle(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        post_id = data.get('post_id')
+        user = User.objects.get(username=username)
+        if Likes.objects.filter(user_id=user.id, post_id=post_id).exists():
+            Likes.objects.filter(user_id=user.id, post_id=post_id).delete()
+            return JsonResponse({'status': 'Yeet has been unliked'}, status=200)
+        else:
+            Likes.objects.create(
+                user_id = user.id,
+                post_id = post_id
+            )
+            return JsonResponse({'status': 'Yeet has been liked'}, status=201)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User does not exist'}, status=404)
+    
+# Final - ReYeet or UnReYeet a post
+@api_view(['POST'])
+def reyeet_toggle(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        post_id = data.get('post_id')
+        user = User.objects.get(username=username)
+        if Retweets.objects.filter(user_id=user.id, post_id=post_id).exists():
+            Retweets.objects.filter(user_id=user.id, post_id=post_id).delete()
+            return JsonResponse({'status': 'Yeet has been unReYeeted'}, status=200)
+        else:
+            Retweets.objects.create(
+                user_id = user.id,
+                post_id = post_id
+            )
+            return JsonResponse({'status': 'Yeet has been ReYeeted'}, status=201)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User does not exist'}, status=404)
 
 
 

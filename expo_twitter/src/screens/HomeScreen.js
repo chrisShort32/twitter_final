@@ -22,6 +22,13 @@ const HomeScreen = () => {
     setRefreshTrigger(prev => prev + 1)
   };
 
+  const handleLikeSuccess = () => {
+    setRefreshTrigger(prev = prev + 1);
+    };
+
+  const handleReYeetSuccess = () => {
+    setRefreshTrigger(prev => prev + 1)
+  };
   const handleLogout = async () => {
     await logout();
     // Navigation is handled by the AuthContext
@@ -63,11 +70,19 @@ const HomeScreen = () => {
       </View>
 
       {/* Feed */}
-      <View style={{ flex: 1, maxWidth: 750, alignSelf: 'center' }} contentContainerStyle={{ paddingBottom: 100 }}>
+      <View style={{ flex: 1, maxWidth: 750, alignSelf: 'center' }}>
         {activeTab === 'following' ? (
-          <FollowingFeed refreshTrigger={refreshTrigger}/>
+          <FollowingFeed
+            refreshTrigger={refreshTrigger}
+            onLikeSuccess={handleLikeSuccess}
+            onReYeetSuccess={handleReYeetSuccess}
+          />
          ) : (
-         <MyPostsFeed refreshTrigger={refreshTrigger}/>
+         <MyPostsFeed
+            refreshTrigger={refreshTrigger}
+            onLikeSuccess={handleLikeSuccess}
+            onReYeetSuccess={handleReYeetSuccess}
+          />
          )}
       </View>
     </ScrollView>
