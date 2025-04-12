@@ -243,3 +243,107 @@ export const verifyToken = async (token) => {
     return false;
   }
 }; 
+
+/**
+ * Search for users by username
+ * @param {string} searchTerm - Search query
+ * @returns {Promise<Object>} - List of matching users
+ */
+export const searchUsers = async (searchTerm) => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const response = await fetch(`http://54.147.244.63:8000/search_users/?query=${encodeURIComponent(searchTerm)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, users: data };
+    } else {
+      return { success: false, error: data.error || 'Error searching for users' };
+    }
+  } catch (error) {
+    console.error('Search API error:', error);
+    return { success: false, error: 'An error occurred during search' };
+  }
+};
+
+/**
+ * Get user profile by username
+ * @param {string} username - Username to fetch
+ * @returns {Promise<Object>} - User profile data
+ */
+export const getUserProfile = async (username) => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const response = await fetch(`http://54.147.244.63:8000/user_profile/${username}/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, profile: data };
+    } else {
+      return { success: false, error: data.error || 'Error fetching user profile' };
+    }
+  } catch (error) {
+    console.error('Profile API error:', error);
+    return { success: false, error: 'An error occurred while fetching the profile' };
+  }
+};
+
+/**
+ * Toggle follow status for a user
+ * @param {string} username - Username to follow/unfollow
+ * @returns {Promise<Object>} - Success or error message
+ */
+export const toggleFollow = async (username) => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const response = await fetch(`http://54.147.244.63:8000/follow_toggle/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`
+      },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { 
+        success: true, 
+        status: data.status,
+        followed: data.status === 'followed'
+      };
+    } else {
+      return { success: false, error: data.error || 'Error toggling follow status' };
+    }
+  } catch (error) {
+    console.error('Follow toggle API error:', error);
+    return { success: false, error: 'An error occurred while toggling follow status' };
+  }
+}; 
