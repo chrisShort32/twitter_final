@@ -286,10 +286,15 @@ export const getUserProfile = async (username) => {
   try {
     const user = await getCurrentUser();
     if (!user) {
+      console.error('[getUserProfile] Not authenticated');
       return { success: false, error: 'User not authenticated' };
     }
 
-    const response = await fetch(`http://54.147.244.63:8000/user_profile/${username}/`, {
+    console.log(`[getUserProfile] Fetching profile for: ${username}`);
+    const url = `http://54.147.244.63:8000/user_profile/${encodeURIComponent(username)}/`;
+    console.log(`[getUserProfile] URL: ${url}`);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -298,15 +303,24 @@ export const getUserProfile = async (username) => {
     });
 
     const data = await response.json();
+    console.log(`[getUserProfile] Response status: ${response.status}`);
 
     if (response.ok) {
+      console.log(`[getUserProfile] Success for: ${username}`);
       return { success: true, profile: data };
     } else {
-      return { success: false, error: data.error || 'Error fetching user profile' };
+      console.error(`[getUserProfile] Error for ${username}:`, data.error || response.statusText);
+      return { 
+        success: false, 
+        error: data.error || `Error fetching user profile (${response.status})` 
+      };
     }
   } catch (error) {
-    console.error('Profile API error:', error);
-    return { success: false, error: 'An error occurred while fetching the profile' };
+    console.error(`[getUserProfile] Exception for ${username}:`, error);
+    return { 
+      success: false, 
+      error: `An error occurred while fetching the profile: ${error.message}` 
+    };
   }
 };
 
