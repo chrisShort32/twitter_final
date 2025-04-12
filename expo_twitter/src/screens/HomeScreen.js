@@ -56,49 +56,6 @@ const HomeScreen = ({ navigation }) => {
         <SearchBar navigation={navigation} />
       </View>
 
-      {/* Test Button for User Profile */}
-      <View style={{ alignItems: 'center', marginBottom: 10 }}>
-        <TouchableOpacity 
-          style={{
-            backgroundColor: '#1DA1F2',
-            paddingVertical: 8,
-            paddingHorizontal: 15,
-            borderRadius: 20,
-            marginBottom: 10
-          }}
-          onPress={() => {
-            console.log('Test navigation to user profile');
-            navigation.navigate('UserProfile', { username: 'shenderson88' });
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-            Test Profile Navigation
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={{
-            backgroundColor: '#1DA1F2',
-            paddingVertical: 8,
-            paddingHorizontal: 15,
-            borderRadius: 20,
-            marginBottom: 10
-          }}
-          onPress={() => {
-            console.log('Navigating to Lucas profile');
-            navigation.navigate('UserProfile', { username: 'lucasb87' });
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-            View Lucas Profile
-          </Text>
-        </TouchableOpacity>
-        
-        <Text style={{ color: '#657786', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>
-          You can now search for users above and click on their name to view their profile!
-        </Text>
-      </View>
-
       {/* Post Input */}
       <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
         <PostInput user={user} onPostSuccess={handlePostSuccess} />
