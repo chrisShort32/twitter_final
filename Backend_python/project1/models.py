@@ -128,7 +128,7 @@ class Follows(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'follows'
         unique_together = (('user', 'following_user'), ('user', 'following_user'),)
 
@@ -140,7 +140,7 @@ class Likes(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'likes'
 
 
@@ -157,7 +157,7 @@ class Posts(models.Model):
 
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'posts'
 
 
@@ -178,7 +178,7 @@ class Retweets(models.Model):
     retweet_timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'retweets'
 
 
