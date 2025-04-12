@@ -48,7 +48,29 @@ const SearchBar = ({ navigation }) => {
 
   const handleUserPress = (username) => {
     console.log('Navigating to profile for:', username);
-    navigation.navigate('UserProfile', { username });
+    
+    // Try both navigation methods to ensure one works
+    try {
+      // Method 1: Standard navigation
+      navigation.navigate('UserProfile', { username });
+      console.log('Navigation method 1 attempted');
+      
+      // Method 2: Alternative with reset (if method 1 doesn't work)
+      /*
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'Home' },
+          { name: 'UserProfile', params: { username } },
+        ],
+      });
+      console.log('Navigation method 2 attempted');
+      */
+    } catch (err) {
+      console.error('Navigation error:', err);
+    }
+    
+    // Clean up search state
     setSearching(false);
     setQuery('');
     setResults([]);
@@ -102,6 +124,7 @@ const SearchBar = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.resultItem}
                 onPress={() => handleUserPress(item.username)}
+                activeOpacity={0.7}
               >
                 <Image
                   source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }}
@@ -113,6 +136,7 @@ const SearchBar = ({ navigation }) => {
                     {item.first_name || ''} {item.last_name || ''}
                   </Text>
                 </View>
+                <Text style={styles.viewProfileText}>View Profile</Text>
               </TouchableOpacity>
             )}
           />
@@ -190,19 +214,20 @@ const styles = StyleSheet.create({
     borderColor: '#E1E8ED',
     borderRadius: 5,
     maxHeight: 300,
-    zIndex: 1000,
+    zIndex: 9999,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
+    backgroundColor: '#FFFFFF',
   },
   avatar: {
     width: 40,
@@ -234,6 +259,12 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     color: '#657786',
+  },
+  viewProfileText: {
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+    marginLeft: 'auto',
+    fontSize: 14,
   },
 });
 

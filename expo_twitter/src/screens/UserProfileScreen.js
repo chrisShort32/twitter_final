@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import Yeet from '../components/Yeet';
 
 const UserProfileScreen = ({ route, navigation }) => {
-  const { username } = route.params;
+  const username = route.params?.username;
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,12 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
+    console.log('UserProfileScreen mounted with username:', username);
+    if (!username) {
+      setError('No username provided');
+      setLoading(false);
+      return;
+    }
     fetchUserProfile();
   }, [username]);
 
@@ -34,9 +40,11 @@ const UserProfileScreen = ({ route, navigation }) => {
     setError('');
     
     try {
+      console.log('Fetching profile for:', username);
       const response = await getUserProfile(username);
       
       if (response.success) {
+        console.log('Profile data received:', response.profile);
         setProfile(response.profile);
         
         // Make sure these property names match what your backend returns
@@ -44,9 +52,8 @@ const UserProfileScreen = ({ route, navigation }) => {
         setIsFollowing(response.profile.is_following || false);
         setFollowersCount(response.profile.followers_count || 0);
         setFollowingCount(response.profile.following_count || 0);
-        
-        console.log("Profile loaded:", response.profile);
       } else {
+        console.error('Profile fetch error:', response.error);
         setError(response.error);
       }
     } catch (err) {
