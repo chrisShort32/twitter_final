@@ -28,18 +28,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
-
-# This is used in project1
-class UserInfoView(APIView):
-    def get(self, request, username):
-        try:
-            user = User.objects.get(username=username)
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            return Response({'error': 'User not found!'}, status=status.HTTP_404_NOT_FOUND)
-
-
 class PostInfoView(APIView):
     def get(self, request):
         posts = Posts.objects.all()
@@ -310,6 +298,90 @@ def reyeet_toggle(request):
     except User.DoesNotExist:
         return JsonResponse({'error': 'User does not exist'}, status=404)
 
+# Final - Get User Information By Username
+@api_view(['GET'])
+def get_user_info(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        user = User.objects.get(username=username)
 
+        follower_count = Follows.objects.filter(following_user_id=user.id).count()
+        following_count = Follows.objects.filter(user_id=user.id).count()
+
+        serializer = UserSerializer(user)
+        user_data = serializer.data
+        user_data['follower_count'] = follower_count
+        user_data['following_count'] = following_count
+        return Response(user_data)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found!'}, status=404)
+
+# Final - Get Posts a user has 'liked' By Username
+@api_view(['GET'])
+def get_liked_posts(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        user = User.objects.get(username=username)
+        likes = Likes.objects.filter(user_id=user.id)
+        liked_posts = []
+        for like in likes:
+            post = Posts.objects.select_related('user').get(post_id=like.post_id)
+            posting_user = post.user
+            liked_posts.append({
+                'user_id': posting_user.id,
+                'username': posting_user.username,
+                'post_id': post.post_id,
+                'post_content': post.content,
+                **get_like_data(post.post_id, user.id)
+            })
+        return Response(liked_posts, status=200)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+    
+# Final - Get Posts a user has reYeeted By Username
+@api_view(['GET'])
+def get_reyeeted_posts(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        user = User.objects.get(username=username)
+        reyeets = Retweets.objects.filter(user_id=user.id)
+        reyeeted_posts = []
+        for reyeet in reyeets:
+            post = Posts.objects.select_related('user').get(post_id=reyeet.post_id)
+            posting_user = post.user
+            reyeeted_posts.append({
+                'user_id': posting_user.id,
+                'username': posting_user.username,
+                'post_id': post.post_id,
+                'post_content': post.content,
+                **get_retweet_data(post.post_id, user.id)
+            })
+        return Response(reyeeted_posts, status=200)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+    
+# Final - Follow/Unfollow toggle
+@api_view(['POST'])
+def follow_unfollow(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        follows_username = data.get('follows_username')
+        user = User.objects.get(username=username)
+        follows_user = User.objects.get(username=follows_username)
+        if Follows.objects.filter(user_id=user.id, following_user_id=follows_user.id).exists():
+            Follows.objects.get(user_id=user.id, following_user_id=follows_user.id).delete()
+            return JsonResponse({'status': f'You have unfollowed {follows_username}'}, status=201)
+        else:
+            Follows.objects.create(
+                user_id = user.id,
+                following_user_id = follows_user.id
+            )
+            return JsonResponse({'status': f'You have followed {follows_username}'}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User does not exist'}, status=404)
 
         
