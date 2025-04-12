@@ -40,6 +40,8 @@ const AppNavigator = () => {
               options={{
                 gestureEnabled: false,
                 animationEnabled: true,
+                detachPreviousScreen: false,
+                presentation: 'card',
                 cardStyleInterpolator: ({ current, layouts }) => {
                   return {
                     cardStyle: {
