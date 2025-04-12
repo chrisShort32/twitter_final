@@ -38,13 +38,19 @@ const UserProfileScreen = ({ route, navigation }) => {
       
       if (response.success) {
         setProfile(response.profile);
-        setIsFollowing(response.profile.is_following);
-        setFollowersCount(response.profile.followers_count);
-        setFollowingCount(response.profile.following_count);
+        
+        // Make sure these property names match what your backend returns
+        // Update these property names if your backend uses different ones
+        setIsFollowing(response.profile.is_following || false);
+        setFollowersCount(response.profile.followers_count || 0);
+        setFollowingCount(response.profile.following_count || 0);
+        
+        console.log("Profile loaded:", response.profile);
       } else {
         setError(response.error);
       }
     } catch (err) {
+      console.error("Profile fetch error:", err);
       setError('An error occurred while fetching the profile');
     } finally {
       setLoading(false);
@@ -182,8 +188,18 @@ const UserProfileScreen = ({ route, navigation }) => {
           {activeTab === 'posts' && profile.posts && profile.posts.length > 0 ? (
             profile.posts.map(post => (
               <Yeet
-                key={post.post_id}
-                post={post}
+                key={post.post_id.toString()}
+                post={{
+                  post_id: post.post_id,
+                  username: post.username || profile.username,
+                  user_id: post.user_id,
+                  post_content: post.post_content || post.content,
+                  post_timestamp: post.post_timestamp || post.created_at,
+                  like_count: post.like_count || 0,
+                  liked_by_user: post.liked_by_user || false,
+                  retweet_count: post.retweet_count || 0,
+                  retweeted_by_user: post.retweeted_by_user || false
+                }}
                 onLikeSuccess={() => {}}
                 onReYeetSuccess={() => {}}
               />
@@ -191,8 +207,18 @@ const UserProfileScreen = ({ route, navigation }) => {
           ) : activeTab === 'likes' && profile.liked_posts && profile.liked_posts.length > 0 ? (
             profile.liked_posts.map(post => (
               <Yeet
-                key={post.post_id}
-                post={post}
+                key={post.post_id.toString()}
+                post={{
+                  post_id: post.post_id,
+                  username: post.username,
+                  user_id: post.user_id,
+                  post_content: post.post_content || post.content,
+                  post_timestamp: post.post_timestamp || post.created_at,
+                  like_count: post.like_count || 0,
+                  liked_by_user: post.liked_by_user || false,
+                  retweet_count: post.retweet_count || 0,
+                  retweeted_by_user: post.retweeted_by_user || false
+                }}
                 onLikeSuccess={() => {}}
                 onReYeetSuccess={() => {}}
               />
@@ -200,8 +226,18 @@ const UserProfileScreen = ({ route, navigation }) => {
           ) : activeTab === 'retweets' && profile.retweeted_posts && profile.retweeted_posts.length > 0 ? (
             profile.retweeted_posts.map(post => (
               <Yeet
-                key={post.post_id}
-                post={post}
+                key={post.post_id.toString()}
+                post={{
+                  post_id: post.post_id,
+                  username: post.username,
+                  user_id: post.user_id,
+                  post_content: post.post_content || post.content,
+                  post_timestamp: post.post_timestamp || post.created_at,
+                  like_count: post.like_count || 0,
+                  liked_by_user: post.liked_by_user || false,
+                  retweet_count: post.retweet_count || 0,
+                  retweeted_by_user: post.retweeted_by_user || false
+                }}
                 onLikeSuccess={() => {}}
                 onReYeetSuccess={() => {}}
               />

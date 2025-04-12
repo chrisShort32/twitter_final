@@ -26,15 +26,19 @@ const SearchBar = ({ navigation }) => {
     setSearching(true);
     
     try {
+      console.log("Searching for:", query);
       const response = await searchUsers(query);
       
       if (response.success) {
+        console.log("Search results:", response.users);
         setResults(response.users);
       } else {
+        console.error("Search error:", response.error);
         setError(response.error);
         setResults([]);
       }
     } catch (err) {
+      console.error("Search exception:", err);
       setError('An error occurred while searching');
       setResults([]);
     } finally {
@@ -93,7 +97,7 @@ const SearchBar = ({ navigation }) => {
         <View style={styles.resultsContainer}>
           <FlatList
             data={results}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id ? item.id.toString() : item.username}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
@@ -105,7 +109,9 @@ const SearchBar = ({ navigation }) => {
                 />
                 <View style={styles.userInfo}>
                   <Text style={styles.username}>@{item.username}</Text>
-                  <Text style={styles.name}>{item.first_name} {item.last_name}</Text>
+                  <Text style={styles.name}>
+                    {item.first_name || ''} {item.last_name || ''}
+                  </Text>
                 </View>
               </TouchableOpacity>
             )}
