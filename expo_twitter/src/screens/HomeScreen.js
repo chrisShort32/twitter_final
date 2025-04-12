@@ -70,7 +70,7 @@ const HomeScreen = () => {
       </View>
 
       {/* Feed */}
-      <View style={{ flex: 1, maxWidth: 750, alignSelf: 'center' }}>
+      <View style={{ flex: 1,  width: '100%', maxWidth: 900, alignSelf: 'center' }}>
         {activeTab === 'following' ? (
           <FollowingFeed
             refreshTrigger={refreshTrigger}
