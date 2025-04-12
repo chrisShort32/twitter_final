@@ -23,7 +23,7 @@ const HomeScreen = () => {
   };
 
   const handleLikeSuccess = () => {
-    setRefreshTrigger(prev = prev + 1);
+    setRefreshTrigger(prev => prev + 1);
     };
 
   const handleReYeetSuccess = () => {

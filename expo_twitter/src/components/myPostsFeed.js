@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Yeet from './Yeet';
 
-const MyPostsFeed = ({refreshTrigger }) => {
+const MyPostsFeed = ({refreshTrigger, onLikeSuccess, onReYeetSuccess}) => {
     const { user } = useAuth();
     const [myPosts, setMyPosts] = useState([]);
 

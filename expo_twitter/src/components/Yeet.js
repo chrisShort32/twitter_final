@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-const Yeet = ({ item }) => {
+import axios from 'axios';
+
+const Yeet = ({ item, onLikeSuccess, onReYeetSuccess }) => {
   const {user} = useAuth();
 
   const handleReYeet = async () => {
