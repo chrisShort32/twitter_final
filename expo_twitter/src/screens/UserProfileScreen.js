@@ -214,21 +214,96 @@ const UserProfileScreen = ({ route, navigation }) => {
             <Text style={styles.statLabel}>Following</Text>
           </View>
         </View>
-        {profile.posts && profile.posts.length > 0 ? (
-          <View style={styles.postsContainer}>
-            <Text style={styles.sectionTitle}>Posts</Text>
-            {profile.posts.map((post, index) => (
-              <View key={index} style={styles.postItem}>
-                <Text style={styles.postText}>{post.content}</Text>
-                <Text style={styles.postTime}>{post.created_at}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyPostsContainer}>
-            <Text style={styles.emptyPostsText}>No posts yet</Text>
-          </View>
-        )}
+
+        {/* Tab Selection */}
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'posts' && styles.activeTabButton]}
+            onPress={() => handleTabPress('posts')}
+          >
+            <Text style={[styles.tabText, activeTab === 'posts' && styles.activeTabText]}>
+              Posts
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'likes' && styles.activeTabButton]}
+            onPress={() => handleTabPress('likes')}
+          >
+            <Text style={[styles.tabText, activeTab === 'likes' && styles.activeTabText]}>
+              Likes
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'retweets' && styles.activeTabButton]}
+            onPress={() => handleTabPress('retweets')}
+          >
+            <Text style={[styles.tabText, activeTab === 'retweets' && styles.activeTabText]}>
+              Retweets
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content based on selected tab */}
+        <View style={styles.contentContainer}>
+          {activeTab === 'posts' && (
+            <>
+              {profile.posts && profile.posts.length > 0 ? (
+                <>
+                  {profile.posts.map((post, index) => (
+                    <View key={index} style={styles.postItem}>
+                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
+                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
+                    </View>
+                  ))}
+                </>
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>No posts yet</Text>
+                </View>
+              )}
+            </>
+          )}
+
+          {activeTab === 'likes' && (
+            <>
+              {profile.liked_posts && profile.liked_posts.length > 0 ? (
+                <>
+                  {profile.liked_posts.map((post, index) => (
+                    <View key={index} style={styles.postItem}>
+                      <Text style={styles.postUsername}>@{post.username}</Text>
+                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
+                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
+                    </View>
+                  ))}
+                </>
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>No liked posts</Text>
+                </View>
+              )}
+            </>
+          )}
+
+          {activeTab === 'retweets' && (
+            <>
+              {profile.retweeted_posts && profile.retweeted_posts.length > 0 ? (
+                <>
+                  {profile.retweeted_posts.map((post, index) => (
+                    <View key={index} style={styles.postItem}>
+                      <Text style={styles.postUsername}>@{post.username}</Text>
+                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
+                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
+                    </View>
+                  ))}
+                </>
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>No retweets</Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -330,37 +405,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#657786',
   },
-  postsContainer: {
+  tabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E1E8ED',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  activeTabButton: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#1DA1F2',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#657786',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+  },
+  contentContainer: {
+    flex: 1,
     padding: 15,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#14171A',
+  emptyStateContainer: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#657786',
+    textAlign: 'center',
   },
   postItem: {
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
+    marginBottom: 5,
+  },
+  postUsername: {
+    fontSize: 14,
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
   postText: {
     fontSize: 16,
     color: '#14171A',
     lineHeight: 22,
+    marginBottom: 5,
   },
   postTime: {
     fontSize: 14,
     color: '#657786',
     marginTop: 5,
-  },
-  emptyPostsContainer: {
-    padding: 30,
-    alignItems: 'center',
-  },
-  emptyPostsText: {
-    fontSize: 16,
-    color: '#657786',
   },
 });
 

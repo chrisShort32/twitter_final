@@ -302,11 +302,14 @@ export const getUserProfile = async (username) => {
       }
     });
 
-    const data = await response.json();
     console.log(`[getUserProfile] Response status: ${response.status}`);
+    
+    // Get the response data
+    const data = await response.json();
+    console.log(`[getUserProfile] Response data: ${JSON.stringify(data).substring(0, 200)}...`);
 
     if (response.ok) {
-      console.log(`[getUserProfile] Success for: ${username}`);
+      console.log(`[getUserProfile] Success for: ${username}, found: posts=${data.posts?.length || 0}, liked=${data.liked_posts?.length || 0}, retweets=${data.retweeted_posts?.length || 0}`);
       return { success: true, profile: data };
     } else {
       console.error(`[getUserProfile] Error for ${username}:`, data.error || response.statusText);
