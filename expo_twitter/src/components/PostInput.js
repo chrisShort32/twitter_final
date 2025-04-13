@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, Switch } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, Switch, Platform } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location'
 import { useAuth } from '../context/AuthContext';
@@ -8,32 +8,68 @@ const PostInput = ({onPostSuccess}) => {
   const {user} = useAuth();
   const [postText, setPostText] = useState('');
   const [useLocation, setUseLocation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState('');
-
+  
   const handlePost = async () => {
-    if(!postText.trim()) return;
-    console.log("Posting:", postText);
+    if (!postText.trim()) return;
+  
     let latitude = null;
     let longitude = null;
     let location_name = null;
-
+  
     try {
       if (useLocation) {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Location permission denied');
-          return;
+        if (Platform.OS === 'web') {
+          const getWebLocation =  () => {
+            return new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
+          };
+        
+          try {
+            const position = await getWebLocation();
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+        
+            const geoResponse = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
+              params: {
+                lat: latitude,
+                lon: longitude,
+                format: 'json',
+              },
+              headers: {
+                'Accept-Language': 'en', // optional, ensures city/state in English
+              }
+            });
+        
+            const { address } = geoResponse.data;
+            location_name = [address.city || address.town || address.village, address.state]
+              .filter(Boolean)
+              .join(', ');
+        
+            console.log('Nominatim location_name:', location_name);
+        
+          } catch (err) {
+            console.warn('Nominatim reverse geocode failed:', err);
+            location_name = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+          }
+        
+        
+        } else {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('Location permission denied');
+            return;
+          }
+          const loc = await Location.getCurrentPositionAsync({});
+          latitude = loc.coords.latitude;
+          longitude = loc.coords.longitude;
+  
+          const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
+          location_name = [geo[0]?.city, geo[0]?.region].filter(Boolean).join(', ');
         }
-        const loc = await Location.getCurrentPositionAsync({});
-        latitude = loc.coords.latitude;
-        longitude = loc.coords.longitude;
-
-        const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
-        const city = geo[0]?.city || '';
-        const region = geo[0]?.region || '';
-        location_name = `${city}${city && region ? ', ' : ''}${region}}`;
-      }  
-        await axios.post('http://54.147.244.63:8000/api/post_yeet/', {
+      }
+   
+      await axios.post('http://54.147.244.63:8000/api/post_yeet/', {
           username: user.username,
           post_content: postText,
           latitude,
