@@ -30,11 +30,13 @@ const Yeet = ({ item, onLikeSuccess, onReYeetSuccess }) => {
       }
 
   };
+  console.log('yeet item:', item);
   return (
     <View style={styles.post}>
       <Text style={styles.username}>@{item.username}</Text>
       <Text style={styles.content}>{item.post_content}</Text>
       <Text style={styles.content}>{new Date(item.post_timestamp).toLocaleString()}</Text>
+      <Text style={styles.content}>{item.location_name}</Text>
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={handleLike}>

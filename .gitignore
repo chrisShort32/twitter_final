@@ -24,3 +24,5 @@ expo_twitter/ios/expotwitterlogin.xcworkspace/xcuserdata/
 expo_twitter/ios/.xcode.env
 expo_twitter/ios/.xcode.env.local
 
+__pycache__/
+
