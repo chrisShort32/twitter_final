@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import MapModal from './MadModal';
 
 const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const { user } = useAuth();
@@ -11,6 +12,11 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const [isRetweeted, setIsRetweeted] = useState(post.retweeted_by_user || false);
   const [likeCount, setLikeCount] = useState(post.like_count || 0);
   const [retweetCount, setRetweetCount] = useState(post.retweet_count || 0);
+
+  const [mapVisible, setMapVisible] = useState(false);
+
+  const showMap = () => setMapVisible(true);
+  const hideMap = () => setMapVisible(false);
 
   const handleLike = async () => {
     try {
@@ -51,8 +57,19 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
           {new Date(post.post_timestamp).toLocaleString()}
         </Text>
         {typeof post.location_name === 'string' && post.location_name.trim() !== '' && (
-        <Text style={styles.metaText}> • {post.location_name}</Text>
+        <Text style={styles.metaText}> • {post.location_name} </Text>
         )}
+        {post.longitude && post.latitude && (
+          <TouchableOpacity onPress={showMap}>
+            <Text>📍</Text>
+          </TouchableOpacity>
+        )}
+
+        <MapModal
+          visible={mapVisible}
+          onClose={hideMap}
+          location={{ latitude: post.latitude, longitude: post.longitude }}
+        />
       </View>
 
       <View style={styles.actions}>
@@ -125,7 +142,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  
   metaText: {
     fontSize: 12,
     color: '#657786',

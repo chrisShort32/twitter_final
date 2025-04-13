@@ -36,9 +36,6 @@ export const loginUser = async (email, password) => {
             token: access, // use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        
-        // for web -- local storage
-        localStorage.setItem('user', JSON.stringify(userData));
 
        return { success: true, user: userData };
     }  else {
@@ -80,9 +77,6 @@ export const googleSignIn = async (email) => {
         };
       
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-      
-        // For web --localstorage
-        localStorage.setItem('user', JSON.stringify(userData));
       
         return userData;
       }
@@ -172,9 +166,6 @@ export const registerUser = async (userData) => {
         };
         await AsyncStorage.setItem('user', JSON.stringify(newUserData));
         
-        // For web -- localstorage
-        localStorage.setItem('user', JSON.stringify(newUserData));
-        
         console.log("this is newuserdata: ", newUserData);
         return { success: true, user: newUserData };
     }   else {
@@ -194,7 +185,7 @@ export const registerUser = async (userData) => {
 export const resetPassword = async (email) => {
   try {
     // Send request to reset password
-    const respnse = await fetch(`${API_BASE_URL}/auth/password/reset`, {
+    const response = await fetch(`${API_BASE_URL}/auth/password/reset`, {
         method: 'POST',
         headers: {
             'Content_Type': 'application/json',
@@ -223,9 +214,6 @@ export const logoutUser = async () => {
   try {
     // Clear user session
     await AsyncStorage.removeItem("user");
-     
-    // For web -- localstorage
-    localStorage.removeItem('user');
     
     return { success: true };
   } catch (error) {
@@ -243,15 +231,9 @@ export const logoutUser = async () => {
  */
 export const getCurrentUser = async () => {
   try {
-    let userData;
-
-    if (Platform.OS === 'web') {
-       // For web -- localstorage
-       userData = localStorage.getItem('user');
-    } else {
-       userData = await AsyncStorage.getItem("user");
-    }
-
+    
+    const userData = await AsyncStorage.getItem("user");
+    
     if (!userData) return null;
     
     return JSON.parse(userData);
@@ -270,14 +252,9 @@ export const verifyToken = async (token) => {
   try {
     // In a real app, this would validate the token with your backend
     // For demo purposes, we'll just check if there's a user session
-    let userData;
-    if (Platform.OS === 'web') {
-      // For web -- localstorage
-      userData = localStorage.getItem('user');
-    } else {
-       userData = await AsyncStorage.getItem("user");
-    }
-
+   
+    const userData = await AsyncStorage.getItem("user");
+    
     if (!userData) return false;
     
     const user = JSON.parse(userData);
