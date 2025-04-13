@@ -223,7 +223,7 @@ def get_following_feed(request, username):
         for follow in follow_relationships:
             followed_user = User.objects.get(id=follow.following_user_id)
             # Get the posts by user id
-            posts = Posts.objects.filter(user_id=followed_user.id).order_by('-created_at')
+            posts = Posts.objects.filter(user_id=followed_user.id)
             for post in posts:
                 post_info.append({
                     'user_id': post.user.id,
@@ -238,8 +238,8 @@ def get_following_feed(request, username):
                     **get_retweet_data(post.post_id, user.id)
 
                 })
-
-        return Response(post_info)
+        sorted_posts = sorted(posts, key=lambda x: x['post_timestamp'], reverse=True)
+        return Response(sorted_posts)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
 
