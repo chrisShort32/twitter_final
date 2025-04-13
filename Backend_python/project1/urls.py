@@ -1,6 +1,12 @@
 from django.urls import path
 from . import views
-from .views import UserInfoView, PostInfoView, AllUsersView, AllFollowsView
+from .views import (
+    UserInfoView, PostInfoView, AllUsersView, AllFollowsView,
+    fetch_user_tweets, fetch_user_profile, toggle_follow_user,
+    search_user, like_tweet, retweet_tweet, submit_feedback,
+    feedback_stats, feedback_options
+)
+
 urlpatterns = [
     path('all_users/', views.all_users, name='all_users'),
     path('check_user/', views.check_user_exists, name='check_user'),
@@ -21,4 +27,9 @@ urlpatterns = [
     path('search_users/', views.search_users, name='search_users'),
     path('user_profile/<str:username>/', views.user_profile, name='user_profile'),
     path('follow_toggle/', views.follow_toggle, name='follow_toggle'),
+    path('like_tweet/', like_tweet, name='like_tweet'),
+    path('retweet_tweet/', retweet_tweet, name='retweet_tweet'),
+    path('api/feedback/', submit_feedback, name='submit_feedback'),
+    path('api/feedback/stats/', feedback_stats, name='feedback_stats'),
+    path('api/feedback/options/', feedback_options, name='feedback_options'),
 ]

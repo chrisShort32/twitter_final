@@ -60,6 +60,14 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Feedback Button */}
+      <TouchableOpacity 
+        style={styles.feedbackButton}
+        onPress={() => navigation.navigate('Feedback')}
+      >
+        <Text style={styles.feedbackButtonText}>Give Feedback</Text>
+      </TouchableOpacity>
+
       {/* Search Bar */}
       <View style={{ paddingHorizontal: 15, marginBottom: 50 }}>
         <SearchBar navigation={navigation} />
@@ -167,6 +175,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tabTextActive: {
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  feedbackButton: {
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#1DA1F2',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  feedbackButtonText: {
     color: '#1DA1F2',
     fontWeight: 'bold',
     fontSize: 14,

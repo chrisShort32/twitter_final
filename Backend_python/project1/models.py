@@ -192,3 +192,40 @@ class Users(models.Model):
     class Meta:
         managed = False
         db_table = 'users'
+
+
+class UserFollowing(models.Model):
+    user = models.ForeignKey('Users', related_name='following', on_delete=models.CASCADE)
+    following_user = models.ForeignKey('Users', related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'following_user')
+
+
+class Feedback(models.Model):
+    user = models.ForeignKey('Users', related_name='feedback', on_delete=models.CASCADE)
+    sentiment = models.CharField(max_length=20)  # 'like' or 'dislike'
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.sentiment}"
+
+
+class FeedbackOption(models.Model):
+    text = models.CharField(max_length=255)
+    is_positive = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.text
+
+
+class UserFeedbackOption(models.Model):
+    feedback = models.ForeignKey(Feedback, related_name='selected_options', on_delete=models.CASCADE)
+    option = models.ForeignKey(FeedbackOption, related_name='selected_by', on_delete=models.CASCADE)
+    
+    class Meta:
+        unique_together = ('feedback', 'option')
+    
+    def __str__(self):
+        return f"{self.feedback.user.username} - {self.option.text}"

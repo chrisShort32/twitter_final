@@ -1,17 +1,18 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Posts, Follows, Likes, Retweets
+from .models import Posts, Follows, Likes, Retweets, Feedback, FeedbackOption, UserFeedbackOption
 from rest_framework.response import Response
 from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from django.db import models
 from django.utils import timezone
+from rest_framework.permissions import IsAuthenticated
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -480,6 +481,132 @@ def follow_toggle(request):
         return Response({'error': 'User not found'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_feedback(request):
+    """
+    Submit user feedback about the app
+    """
+    try:
+        user = request.user
+        data = request.data
+        
+        # Validate incoming data
+        sentiment = data.get('sentiment')
+        selected_options = data.get('selected_options', [])
+        
+        if not sentiment or sentiment not in ['like', 'dislike']:
+            return Response(
+                {'error': 'Invalid sentiment value. Must be "like" or "dislike".'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create feedback record
+        feedback = Feedback.objects.create(
+            user=user,
+            sentiment=sentiment
+        )
+        
+        # Create feedback option records
+        for option_id in selected_options:
+            try:
+                option = FeedbackOption.objects.get(id=option_id)
+                UserFeedbackOption.objects.create(
+                    feedback=feedback,
+                    option=option
+                )
+            except FeedbackOption.DoesNotExist:
+                pass  # Skip invalid options
+        
+        return Response(
+            {'success': True, 'message': 'Feedback submitted successfully'}, 
+            status=status.HTTP_201_CREATED
+        )
+    
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def feedback_stats(request):
+    """
+    Get statistics about user feedback
+    """
+    try:
+        # Count likes and dislikes
+        like_count = Feedback.objects.filter(sentiment='like').count()
+        dislike_count = Feedback.objects.filter(sentiment='dislike').count()
+        
+        # Count selections for each option
+        options_data = []
+        options = FeedbackOption.objects.all()
+        
+        for option in options:
+            count = UserFeedbackOption.objects.filter(option=option).count()
+            if count > 0:  # Only include options that have been selected
+                options_data.append({
+                    'id': option.id,
+                    'text': option.text,
+                    'is_positive': option.is_positive,
+                    'count': count
+                })
+        
+        # Sort by count (descending)
+        options_data.sort(key=lambda x: x['count'], reverse=True)
+        
+        # Take top 10 for visualization
+        options_data = options_data[:10]
+        
+        return Response({
+            'like_count': like_count,
+            'dislike_count': dislike_count,
+            'options_count': options_data
+        })
+    
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def feedback_options(request):
+    """
+    Get all available feedback options
+    """
+    try:
+        options = FeedbackOption.objects.all()
+        positive_options = []
+        negative_options = []
+        
+        for option in options:
+            option_data = {
+                'id': option.id,
+                'text': option.text
+            }
+            
+            if option.is_positive:
+                positive_options.append(option_data)
+            else:
+                negative_options.append(option_data)
+        
+        return Response({
+            'positive_options': positive_options,
+            'negative_options': negative_options
+        })
+    
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 

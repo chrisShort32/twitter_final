@@ -157,17 +157,25 @@ const UserProfileScreen = ({ route, navigation }) => {
   };
 
   if (loading) {
+    const debugInfo = `Loading profile for username: ${username || 'undefined'}`;
+    console.log(debugInfo);
+    
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1DA1F2" />
+        <Text style={styles.debugText}>{debugInfo}</Text>
       </View>
     );
   }
 
   if (error) {
+    const debugInfo = `Error loading profile for username: ${username || 'undefined'}, Error: ${error}`;
+    console.log(debugInfo);
+    
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.debugText}>{debugInfo}</Text>
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
@@ -176,9 +184,13 @@ const UserProfileScreen = ({ route, navigation }) => {
   }
 
   if (!profile) {
+    const debugInfo = `Profile not found for username: ${username || 'undefined'}`;
+    console.log(debugInfo);
+    
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>User not found</Text>
+        <Text style={styles.debugText}>{debugInfo}</Text>
         <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
           <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
@@ -463,6 +475,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#657786',
     marginTop: 5,
+  },
+  debugText: {
+    color: '#657786',
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: 'center',
+    padding: 5,
+    backgroundColor: '#F5F8FA',
+    borderRadius: 5,
   },
 });
 

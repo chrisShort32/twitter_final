@@ -6,6 +6,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
 import { useAuth } from '../context/AuthContext';
 
 const Stack = createStackNavigator();
@@ -41,6 +42,29 @@ const AppNavigator = () => {
                 gestureEnabled: false,
                 animationEnabled: true,
                 detachPreviousScreen: false,
+                presentation: 'card',
+                cardStyleInterpolator: ({ current, layouts }) => {
+                  return {
+                    cardStyle: {
+                      transform: [
+                        {
+                          translateX: current.progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [layouts.screen.width, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  };
+                },
+              }}
+            />
+            <Stack.Screen 
+              name="Feedback" 
+              component={FeedbackScreen}
+              options={{
+                gestureEnabled: false,
+                animationEnabled: true,
                 presentation: 'card',
                 cardStyleInterpolator: ({ current, layouts }) => {
                   return {
