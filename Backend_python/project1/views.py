@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import json
 from django.db import models
 from django.utils import timezone
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -162,6 +163,24 @@ def check_user_exists(request):
     except Exception as e:
         return Response({'error': 'An unexpected error occurred'}, status=500)
 
+#Final - Get google auth token
+@api_view(['POST'])
+def google_login(request):
+    email = request.data.get('email')
+
+    if not email:
+        return Response({'error': 'Email required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email=email)
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        })
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 # Final - Verify username and email dont exist
 @api_view(['POST'])
 def validate_signup_info(request):

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Platform } from 'react-native';
 const API_BASE_URL = 'http://54.147.244.63:8000/api';
 
 /**
@@ -36,6 +36,9 @@ export const loginUser = async (email, password) => {
             token: access, // use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
+        
+        // for web -- local storage
+        localStorage.setItem('user', JSON.stringify(userData));
 
        return { success: true, user: userData };
     }  else {
@@ -61,9 +64,28 @@ export const googleSignIn = async (email) => {
 
     if(checkData.exists) {
       console.log("User exists, Proceeding with login...");
-      await AsyncStorage.setItem('user', JSON.stringify(checkData));
-      return checkData;
-  
+      const loginResponse = await fetch(`${API_BASE_URL}/auth/google-login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+          email: email,
+        })
+      });
+
+      const loginData = await loginResponse.json();
+      if (loginData.access) {
+        const userData = {
+          ...checkData,
+          token: loginData.access
+        };
+      
+        await AsyncStorage.setItem('user', JSON.stringify(checkData));
+      
+      // For web --localstorage
+      //localStorage.setItem('user', JSON.stringify(checkData));
+      
+        return userData;
+      }
     } else {
       console.log(`No account exists with the email ${email}`);
       return { exists: false };
@@ -149,6 +171,10 @@ export const registerUser = async (userData) => {
             token: access, // Use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(newUserData));
+        
+        // For web -- localstorage
+        localStorage.setItem('user', JSON.stringify(newUserData));
+        
         console.log("this is newuserdata: ", newUserData);
         return { success: true, user: newUserData };
     }   else {
@@ -197,6 +223,9 @@ export const logoutUser = async () => {
   try {
     // Clear user session
     await AsyncStorage.removeItem("user");
+     
+    // For web -- localstorage
+    localStorage.removeItem('user');
     
     return { success: true };
   } catch (error) {
@@ -214,7 +243,15 @@ export const logoutUser = async () => {
  */
 export const getCurrentUser = async () => {
   try {
-    const userData = await AsyncStorage.getItem("user");
+    let userData;
+
+    if (Platform.OS === 'web') {
+       // For web -- localstorage
+       userData = localStorage.getItem('user');
+    } else {
+       userData = await AsyncStorage.getItem("user");
+    }
+
     if (!userData) return null;
     
     return JSON.parse(userData);
@@ -233,7 +270,14 @@ export const verifyToken = async (token) => {
   try {
     // In a real app, this would validate the token with your backend
     // For demo purposes, we'll just check if there's a user session
-    const userData = await AsyncStorage.getItem("user");
+    let userData;
+    if (Platform.OS === 'web') {
+      // For web -- localstorage
+      userData = localStorage.getItem('user');
+    } else {
+       userData = await AsyncStorage.getItem("user");
+    }
+
     if (!userData) return false;
     
     const user = JSON.parse(userData);
