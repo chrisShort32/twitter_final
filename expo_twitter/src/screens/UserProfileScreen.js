@@ -27,6 +27,41 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
+  const handleLikeSuccess = (postId) => {
+    const updatedProfile = { ...profile };
+  
+    const updateList = (list) =>
+      list?.map((post) =>
+        post.id === postId
+          ? { ...post, is_liked: !post.is_liked, like_count: (post.like_count || 0) + (post.is_liked ? -1 : 1) }
+          : post
+      );
+  
+    updatedProfile.posts = updateList(profile.posts);
+    updatedProfile.liked_posts = updateList(profile.liked_posts);
+    updatedProfile.retweeted_posts = updateList(profile.retweeted_posts);
+  
+    setProfile(updatedProfile);
+  };
+  
+  const handleReYeetSuccess = (postId) => {
+    const updatedProfile = { ...profile };
+  
+    const updateList = (list) =>
+      list?.map((post) =>
+        post.id === postId
+          ? { ...post, is_retweeted: !post.is_retweeted, retweet_count: (post.retweet_count || 0) + (post.is_retweeted ? -1 : 1) }
+          : post
+      );
+  
+    updatedProfile.posts = updateList(profile.posts);
+    updatedProfile.liked_posts = updateList(profile.liked_posts);
+    updatedProfile.retweeted_posts = updateList(profile.retweeted_posts);
+  
+    setProfile(updatedProfile);
+  };
+  
+
   useEffect(() => {
     console.log('[UserProfileScreen] Mounted with username:', username, 'timestamp:', timestamp);
     
@@ -250,10 +285,12 @@ const UserProfileScreen = ({ route, navigation }) => {
               {profile.posts && profile.posts.length > 0 ? (
                 <>
                   {profile.posts.map((post, index) => (
-                    <View key={index} style={styles.postItem}>
-                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
-                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
-                    </View>
+                    <Yeet key={index} 
+                      post={post}
+                      onLikeSuccess={handleLikeSuccess} 
+                      onReYeetSuccess={handleReYeetSuccess}
+                    />
+                  
                   ))}
                 </>
               ) : (
@@ -269,11 +306,12 @@ const UserProfileScreen = ({ route, navigation }) => {
               {profile.liked_posts && profile.liked_posts.length > 0 ? (
                 <>
                   {profile.liked_posts.map((post, index) => (
-                    <View key={index} style={styles.postItem}>
-                      <Text style={styles.postUsername}>@{post.username}</Text>
-                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
-                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
-                    </View>
+                    <Yeet key={index} 
+                      post={post}
+                      onLikeSuccess={handleLikeSuccess} 
+                      onReYeetSuccess={handleReYeetSuccess}
+                    />
+                      
                   ))}
                 </>
               ) : (
@@ -289,11 +327,11 @@ const UserProfileScreen = ({ route, navigation }) => {
               {profile.retweeted_posts && profile.retweeted_posts.length > 0 ? (
                 <>
                   {profile.retweeted_posts.map((post, index) => (
-                    <View key={index} style={styles.postItem}>
-                      <Text style={styles.postUsername}>@{post.username}</Text>
-                      <Text style={styles.postText}>{post.content || post.post_content}</Text>
-                      <Text style={styles.postTime}>{post.created_at || post.post_timestamp}</Text>
-                    </View>
+                      <Yeet key={index} 
+                        post={post}
+                        onLikeSuccess={handleLikeSuccess} 
+                        onReYeetSuccess={handleReYeetSuccess}
+                      />
                   ))}
                 </>
               ) : (
