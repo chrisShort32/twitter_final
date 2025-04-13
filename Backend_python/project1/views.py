@@ -223,7 +223,7 @@ def get_following_feed(request, username):
         for follow in follow_relationships:
             followed_user = User.objects.get(id=follow.following_user_id)
             # Get the posts by user id
-            posts = Posts.objects.filter(user_id=followed_user.id)
+            posts = Posts.objects.filter(user_id=followed_user.id).order_by('-created_at')
             for post in posts:
                 post_info.append({
                     'user_id': post.user.id,
@@ -249,7 +249,7 @@ def get_user_posts(request, username):
     try:
         post_info = []
         user = User.objects.get(username=username)
-        posts = Posts.objects.filter(user_id=user.id)
+        posts = Posts.objects.filter(user_id=user.id).order_by('-created_at')
 
         for post in posts:
             post_info.append({
