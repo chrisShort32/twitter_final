@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  Platform,
+  ScrollView,
   Image,
 } from 'react-native';
 import { searchUsers } from '../api/authApi';
@@ -115,7 +115,7 @@ const SearchBar = ({ navigation }) => {
       )}
 
       {searching && results.length > 0 && (
-        <View style={styles.resultsContainer}>
+        <ScrollView style={styles.resultsContainer}>
           {results.map((item) => (
             <TouchableOpacity 
               key={item.id ? item.id.toString() : item.username} 
@@ -165,8 +165,9 @@ const SearchBar = ({ navigation }) => {
                 <Text style={styles.arrowText}>→</Text>
               </View>
             </TouchableOpacity>
+            
           ))}
-        </View>
+        </ScrollView>
       )}
 
       {searching && results.length === 0 && !loading && !error && (
@@ -183,6 +184,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10,
     zIndex: 1000,
+    elevation: 1000,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -238,11 +240,9 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: 'red',
+    borderColor: 'blue',
     borderRadius: 8,
-    maxHeight: 300,
-    //zIndex: 10000,
-    elevation: 10000,
+    maxHeight: 400,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,

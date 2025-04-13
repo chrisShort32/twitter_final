@@ -66,7 +66,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       {/* Post Input */}
-      <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
+      <View style={{ zIndex:0, paddingHorizontal: 15, marginBottom: 10 }}>
         <PostInput user={user} onPostSuccess={handlePostSuccess} />
       </View>
 
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 15, 
     marginBottom: 50,
+    zIndex: 1,
   },
   tabBar: {
     flexDirection: 'row',
