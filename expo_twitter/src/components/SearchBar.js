@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  FlatList,
+  Platform,
   Image,
 } from 'react-native';
 import { searchUsers } from '../api/authApi';
@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     marginBottom: 10,
+    zIndex: 1000,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -231,17 +232,17 @@ const styles = StyleSheet.create({
     color: '#FF0000',
   },
   resultsContainer: {
-    position: 'absolute',
+    position:'absolute',
     top: 50,
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E1E8ED',
+    borderWidth: 2,
+    borderColor: 'red',
     borderRadius: 8,
     maxHeight: 300,
-    zIndex: 10000,
-    elevation: 8,
+    //zIndex: 10000,
+    elevation: 10000,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,

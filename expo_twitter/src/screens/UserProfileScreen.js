@@ -148,7 +148,7 @@ const UserProfileScreen = ({ route, navigation }) => {
         );
         
         // For testing, use mock data instead of showing error
-        console.log('[UserProfileScreen] Using mock profile data');
+        //console.log('[UserProfileScreen] Using mock profile data');
         setProfile(mockProfile);
         setFollowersCount(mockProfile.followers_count);
         setFollowingCount(mockProfile.following_count);

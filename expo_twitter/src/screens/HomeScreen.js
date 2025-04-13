@@ -61,7 +61,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       {/* Search Bar */}
-      <View style={{ paddingHorizontal: 15, marginBottom: 50 }}>
+      <View style={styles.searchContainer}>
         <SearchBar navigation={navigation} />
       </View>
 
@@ -145,6 +145,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
     textAlign: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: 15, 
+    marginBottom: 50,
   },
   tabBar: {
     flexDirection: 'row',
