@@ -125,10 +125,10 @@ class DjangoSession(models.Model):
 class Follows(models.Model):
     user = models.OneToOneField('AuthUser', models.DO_NOTHING, primary_key=True)  # The composite primary key (user_id, following_user_id) found, that is not supported. The first column is selected.
     following_user = models.ForeignKey('AuthUser', models.DO_NOTHING, related_name='follows_following_user_set')
-    created_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'follows'
         unique_together = (('user', 'following_user'), ('user', 'following_user'),)
 
@@ -140,7 +140,7 @@ class Likes(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'likes'
 
 
@@ -151,9 +151,13 @@ class Posts(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(blank=True, null=True)
     deleted = models.IntegerField(blank=True, null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    location_name = models.CharField(max_length=100, null=True, blank=True)
+
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'posts'
 
 
@@ -174,7 +178,7 @@ class Retweets(models.Model):
     retweet_timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'retweets'
 
 

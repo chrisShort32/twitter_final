@@ -13,7 +13,6 @@ urlpatterns = [
     path('validate_new_user/', views.validate_signup_info, name='validate_info'),
     path('all_posts/', views.all_posts, name='all_posts'),
     path('view_all_posts/', PostInfoView.as_view(), name='post-info'),   
-    path('api/user/<str:username>', UserInfoView.as_view(), name='user-info'),
     path('api/user/<str:username>/<str:checkInfo>/', views.get_user_info, name='get_user_info'),
     path('api/users/', AllUsersView.as_view(), name='all-users-api'),
     path('api/follows/', AllFollowsView.as_view(), name='all-follows-api'),
