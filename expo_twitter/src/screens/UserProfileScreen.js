@@ -14,6 +14,7 @@ import {
 import { getUserProfile, toggleFollow } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import Yeet from '../components/Yeet';
+import FollowButton from '../components/FollowButton';
 
 const UserProfileScreen = ({ route, navigation }) => {
   const username = route?.params?.username;
@@ -93,28 +94,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     try {
       console.log('[UserProfileScreen] Fetching profile for:', username);
       
-      // Create mock profile data if needed for testing
-      const mockProfile = {
-        username: username,
-        first_name: 'Test',
-        last_name: 'User',
-        bio: 'This is a mock profile for testing',
-        followers_count: 5,
-        following_count: 10,
-        posts_count: 3,
-        posts: [
-          {
-            post_id: 1,
-            user_id: 1,
-            username: username,
-            content: 'This is a test post',
-            created_at: new Date().toISOString(),
-            like_count: 2,
-            retweet_count: 1
-          }
-        ]
-      };
-      
       // Add timeout protection in case API never responds
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
@@ -146,27 +125,14 @@ const UserProfileScreen = ({ route, navigation }) => {
           `Could not load profile for ${username}: ${response.error || 'Unknown error'}`,
           [{ text: 'OK' }]
         );
-        
-        // For testing, use mock data instead of showing error
-        //console.log('[UserProfileScreen] Using mock profile data');
-        setProfile(mockProfile);
-        setFollowersCount(mockProfile.followers_count);
-        setFollowingCount(mockProfile.following_count);
       }
     } catch (err) {
       console.error("[UserProfileScreen] Profile fetch error:", err);
       setError(`An error occurred while fetching the profile: ${err.message}`);
-      
-      // Alert the user about the problem
-      Alert.alert(
-        'Profile Error',
-        `Could not load profile for ${username}: ${err.message}`,
-        [{ text: 'OK' }]
-      );
     } finally {
       setLoading(false);
     }
-  };
+}
 
   const handleFollowToggle = async () => {
     try {
@@ -174,14 +140,9 @@ const UserProfileScreen = ({ route, navigation }) => {
       
       if (response.success) {
         setIsFollowing(response.followed);
-        if (response.followed) {
-          setFollowersCount(followersCount + 1);
-        } else {
-          setFollowersCount(followersCount - 1);
-        }
-      } else {
-        console.error('Failed to toggle follow:', response.error);
+        setFollowersCount(prev => response.followed ? prev + 1 : prev - 1);
       }
+       
     } catch (err) {
       console.error('Follow toggle error:', err);
     }
@@ -241,13 +202,22 @@ const UserProfileScreen = ({ route, navigation }) => {
         </View>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statCount}>{profile.followers_count || 0}</Text>
+            <Text style={styles.statCount}>{followersCount}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statCount}>{profile.following_count || 0}</Text>
+            <Text style={styles.statCount}>{followingCount}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </View>
+          <FollowButton
+            targetUsername={profile.username}
+            user={user}
+            isFollowing={isFollowing}
+            setIsFollowing={setIsFollowing}
+            followersCount={followersCount}
+            setFollowersCount={setFollowersCount}
+            onToggle={handleFollowToggle}
+          />
         </View>
 
         {/* Tab Selection */}

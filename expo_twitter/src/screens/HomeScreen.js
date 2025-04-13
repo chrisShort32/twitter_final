@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,7 +14,9 @@ import PostInput from '../components/PostInput';
 import FollowingFeed from '../components/FollowingFeed';
 import MyPostsFeed from '../components/myPostsFeed';
 import SearchBar from '../components/SearchBar';
-import { getUserProfile } from '../api/authApi';
+import { useFocusEffect } from '@react-navigation/native';
+
+
 
 const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
@@ -37,6 +39,12 @@ const HomeScreen = ({ navigation }) => {
     // Navigation is handled by the AuthContext
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, [])
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -46,9 +54,9 @@ const HomeScreen = ({ navigation }) => {
           style={styles.profileButton}
           onPress={() => {
             console.log('Navigating to my profile');
-            navigation.navigate('UserProfile', { 
+            navigation.push('UserProfile', { 
               username: user.username,
-              timestamp: new Date().getTime() 
+              timestamp: new Date().getTime(),
             });
           }}
         >
