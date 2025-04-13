@@ -214,8 +214,12 @@ def get_following_feed(request, username):
                     'post_id': post.post_id,
                     'post_content': post.content,
                     'post_timestamp': post.created_at,
+                    'latitude': post.latitude,
+                    'longitude': post.longitude,
+                    'location_name': post.location_name,
                     **get_like_data(post.post_id, user.id),
                     **get_retweet_data(post.post_id, user.id)
+
                 })
 
         return Response(post_info)
@@ -237,6 +241,9 @@ def get_user_posts(request, username):
                 'post_id': post.post_id,
                 'post_content': post.content,
                 'post_timestamp': post.created_at,
+                'latitude': post.latitude,
+                'longitude': post.longitude,
+                'location_name': post.location_name,
                 **get_like_data(post.post_id, user.id),
                 **get_retweet_data(post.post_id, user.id)
             })
@@ -251,12 +258,20 @@ def yeet(request):
         data = json.loads(request.body)
         username = data.get('username')
         post_content = data.get('post_content')
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        location_name = data.get('location_name')
+
         user = User.objects.get(username=username)
 
         Posts.objects.create(
-           user_id=user.id,
-           content=post_content
+            user_id=user.id,
+            content=post_content,
+            latitude=latitude,
+            longitude=longitude,
+            location_name=location_name
         )
+
         return JsonResponse({'status': 'Yeet successfully Yeeted'}, status=201)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
@@ -368,6 +383,9 @@ def user_profile(request, username):
                 'username': profile_user.username,
                 'post_content': post.content,
                 'post_timestamp': post.created_at,
+                'latitude': post.latitude,
+                'longitude': post.longitude,
+                'location_name': post.location_name,
                 **get_like_data(post.post_id, current_user.id if current_user.is_authenticated else None),
                 **get_retweet_data(post.post_id, current_user.id if current_user.is_authenticated else None),
             }
@@ -387,6 +405,9 @@ def user_profile(request, username):
                         'username': post_user.username,
                         'post_content': post.content,
                         'post_timestamp': post.created_at,
+                        'latitude': post.latitude,
+                        'longitude': post.longitude,
+                        'location_name': post.location_name,
                         **get_like_data(post.post_id, current_user.id),
                         **get_retweet_data(post.post_id, current_user.id),
                     }
@@ -406,6 +427,9 @@ def user_profile(request, username):
                         'username': post_user.username,
                         'post_content': post.content,
                         'post_timestamp': post.created_at,
+                        'latitude': post.latitude,
+                        'longitude': post.longitude,
+                        'location_name': post.location_name,
                         **get_like_data(post.post_id, current_user.id),
                         **get_retweet_data(post.post_id, current_user.id),
                     }
