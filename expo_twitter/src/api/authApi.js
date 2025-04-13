@@ -68,7 +68,7 @@ export const googleSignIn = async (userData) => {
       };
 
 
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      await AsyncStorage.setItem('user', JSON.stringify(fullUserData));
       return {success: true, ...fullUserData};
       
   } catch (error) {
