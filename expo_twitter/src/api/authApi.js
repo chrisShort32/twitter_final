@@ -64,7 +64,7 @@ export const googleSignIn = async (email) => {
 
     if(checkData.exists) {
       console.log("User exists, Proceeding with login...");
-      const loginResponse = await fetch(`${API_BASE_URL}/auth/google-login`, {
+      const loginResponse = await fetch('http://54.147.244.63:8000/auth/google-login/', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ 
@@ -79,10 +79,10 @@ export const googleSignIn = async (email) => {
           token: loginData.access
         };
       
-        await AsyncStorage.setItem('user', JSON.stringify(checkData));
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
       
-      // For web --localstorage
-      //localStorage.setItem('user', JSON.stringify(checkData));
+        // For web --localstorage
+        localStorage.setItem('user', JSON.stringify(userData));
       
         return userData;
       }
