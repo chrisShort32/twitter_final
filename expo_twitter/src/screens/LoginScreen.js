@@ -69,9 +69,6 @@ const LoginScreen = ({ navigation }) => {
         first_name: userInfo.given_name,
         last_name: userInfo.family_name,
         email: userInfo.email,
-        username: userInfo.given_name + "." + userInfo.family_name + "27",
-        password1: "lmao-this-is-not-a-good-solution",
-        password2: "lmao-this-is-not-a-good-solution",
         auth_type: "google",
         googleId: userInfo.id,
         picture: userInfo.picture

@@ -13,6 +13,8 @@ import json
 from django.db import models
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 
 # this is a simple version of getting all the users that i made when
 # i first started learning. I think using apiView is better. 
@@ -161,10 +163,26 @@ def check_user_exists(request):
         print("CHECK_USER ERROR:", str(e)) 
         return Response({'error': 'An unexpected error occurred'}, status=500)
 
-#Final - Get google auth token
+# Final - Create a unique username
+def generate_unique_username(base):
+    from django.contrib.auth.models import User
+    username = base
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base}{counter}"
+        counter += 1
+    return username
+
+
+#Final - login/signup with google
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def google_login(request):
     email = request.data.get('email')
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+    google_id = request.data.get('google_id')
+    picture = request.data.get('picture')
 
     if not email:
         return Response({'error': 'Email required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -172,13 +190,27 @@ def google_login(request):
     try:
         user = User.objects.get(email=email)
 
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
     except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Create new user
+        username_base = f"{first_name}.{last_name}".lower()
+        username = generate_unique_username(username_base)
+        user = User.objects.create(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+        )
+        user.save()
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+        'username': user.username,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email,
+        'picture': picture,
+    })
 # Final - Verify username and email dont exist
 @api_view(['POST'])
 def validate_signup_info(request):
