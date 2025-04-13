@@ -238,7 +238,7 @@ def get_following_feed(request, username):
                     **get_retweet_data(post.post_id, user.id)
 
                 })
-        sorted_posts = sorted(posts, key=lambda x: x['post_timestamp'], reverse=True)
+        sorted_posts = sorted(posts, key=lambda x: x.post_timestamp, reverse=True)
         return Response(sorted_posts)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
