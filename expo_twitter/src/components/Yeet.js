@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import MapModal from './MadModal';
+import { useNavigation } from '@react-navigation/native';
 
 const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const { user } = useAuth();
+  const navigation = useNavigation();
 
   // Local state 
   const [isLiked, setIsLiked] = useState(post.liked_by_user || false);
@@ -50,7 +52,16 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
 
   return (
     <View style={styles.post}>
-      <Text style={styles.username}>@{post.username}</Text>
+      <TouchableOpacity
+        onPress={() => 
+          navigation.navigate('UserProfile', {
+            username: post.username,
+            timestamp: new Date().getTime(),
+          })
+        }
+      >
+        <Text style={styles.username}>@{post.username}</Text>
+      </TouchableOpacity>
       <Text style={styles.content}>{post.post_content}</Text>
       <View style={styles.metaRow}>
         <Text style={styles.metaText}>
