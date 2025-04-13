@@ -146,14 +146,11 @@ def check_user_exists(request):
     email = request.data.get('email')
     try:
         user = User.objects.get(email=email)
-        print(user.username, user.email)
+        print(f"{user.username}, {user.email}")
         user_data = {
             'exists': True,
-	    'username': user.username,
-	    'email': user.email,
-    	    'first_name': user.first_name,
-            'username': user.username,
-            'email': user.email,
+	        'email': user.email,
+    	    'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
         }
@@ -161,6 +158,7 @@ def check_user_exists(request):
     except ObjectDoesNotExist:
         return Response({'exists': False}, status=200)
     except Exception as e:
+        print("CHECK_USER ERROR:", str(e)) 
         return Response({'error': 'An unexpected error occurred'}, status=500)
 
 #Final - Get google auth token
