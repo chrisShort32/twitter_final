@@ -47,46 +47,33 @@ export const loginUser = async (email, password) => {
   }  
 };
 
-export const googleSignIn = async (email) => {
+export const googleSignIn = async (userData) => {
   try {
-    // Check if user exists
-    const checkResponse = await fetch("http://54.147.244.63:8000/check_user/", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ email }),
-    });
-
-    const checkData = await checkResponse.json();
-    console.log("checkResponse: ", JSON.stringify(checkData));
-
-    if(checkData.exists) {
-      console.log("User exists, Proceeding with login...");
       const loginResponse = await fetch('http://54.147.244.63:8000/auth/google-login/', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ 
-          email: email,
-        })
+        body: JSON.stringify(userData),
       });
 
       const loginData = await loginResponse.json();
-      if (loginData.access) {
-        const userData = {
-          ...checkData,
-          token: loginData.access
-        };
-      
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-      
-        return userData;
+      if (!loginResponse.ok) {
+        console.error("Google login failed", data);
+        return {success: false, error: data.error || 'Login failed'}
       }
-    } else {
-      console.log(`No account exists with the email ${email}`);
-      return { exists: false };
-    }
+      
+      
+      const fullUserData = {
+        ...loginData,
+        token: loginData.access,
+      };
+
+
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      return {success: true, ...fullUserData};
+      
   } catch (error) {
-    console.error("googleSignIn error:", error);
-    throw error;
+      console.error('googleSignIn error', error);
+      return {success: false, error: error.message};
   }
 };
 

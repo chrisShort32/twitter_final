@@ -74,20 +74,14 @@ const LoginScreen = ({ navigation }) => {
         picture: userInfo.picture
       };
       
-      const result = await signInWithGoogle(userData.email);
+      const result = await signInWithGoogle(userData);
       console.log("signInWithGoogle result: ", JSON.stringify(result));
-      if (result.exists) {
-        console.log("User exists, logged in successfully");
+      if (result.success) {
+        console.log("User logged in or created successfully");
       } else {
-        console.log(`Creating account for email: ${userData.email}`);
-        const registered = await register(userData);
-        console.log("registered: ", JSON.stringify(registered));
-        if (registered.success) {
-          console.log("User registered successfully")
-        } else {
-          throw new Error("Registration failed");
-        }
+          throw new Error("Google login/register failed");
       }
+      
     } catch (error) {
       console.error("Google sign in error:", error);
     }

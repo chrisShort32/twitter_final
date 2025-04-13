@@ -143,16 +143,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Google sign in
-  const signInWithGoogle = async (email) => {
+  const signInWithGoogle = async (userData) => {
     try {
-      const result = await authApi.googleSignIn(email);
-      if (result.exists) {
+      const result = await authApi.googleSignIn(userData);
+      if (result.success) {
         setUser(result);
         setIsAuthenticated(true);
         setIsLoading(false);
         return {success: true, ...result}; 
       } else {
-          return {success: false};
+          return {success: false, error: result.error || 'Login failed'};
       }
     } catch (error) {
       console.error("Sign-in with Google failed:", error);
