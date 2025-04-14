@@ -174,7 +174,7 @@ class Project1User(models.Model):
 class Retweets(models.Model):
     retweet_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING)
-    post = models.ForeignKey(Posts, models.DO_NOTHING)
+    post = models.ForeignKey(Posts, models.DO_NOTHING, null=True, blank=True)
     retweet_timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
