@@ -125,7 +125,7 @@ class DjangoSession(models.Model):
 class Follows(models.Model):
     user = models.OneToOneField('AuthUser', models.DO_NOTHING, primary_key=True)  # The composite primary key (user_id, following_user_id) found, that is not supported. The first column is selected.
     following_user = models.ForeignKey('AuthUser', models.DO_NOTHING, related_name='follows_following_user_set', null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -137,7 +137,7 @@ class Likes(models.Model):
     like_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
     post = models.ForeignKey('Posts', models.DO_NOTHING, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -148,7 +148,7 @@ class Posts(models.Model):
     post_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(blank=True, null=True)
     deleted = models.IntegerField(blank=True, null=True)
     latitude = models.FloatField(null=True, blank=True)
@@ -175,7 +175,7 @@ class Retweets(models.Model):
     retweet_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('AuthUser', models.DO_NOTHING, null=True, blank=True)
     post = models.ForeignKey(Posts, models.DO_NOTHING, null=True, blank=True)
-    retweet_timestamp = models.DateTimeField(auto_now_add=True)
+    retweet_timestamp = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -203,7 +203,7 @@ class FeedbackSurvey(models.Model):
     user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
     likes_app = models.BooleanField(default=False)  # True for like, False for hate
     selected_reasons = models.JSONField(blank=True, null=True)  # Stores the multi-select options
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         managed = True
