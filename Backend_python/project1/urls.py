@@ -21,4 +21,8 @@ urlpatterns = [
     path('search_users/', views.search_users, name='search_users'),
     path('user_profile/<str:username>/', views.user_profile, name='user_profile'),
     path('follow_toggle/', views.follow_toggle, name='follow_toggle'),
+    
+    # Feedback survey endpoints
+    path('api/feedback/', views.submit_feedback, name='submit_feedback'),
+    path('api/feedback/stats/', views.get_feedback_stats, name='get_feedback_stats'),
 ]

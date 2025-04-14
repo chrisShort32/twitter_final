@@ -196,3 +196,15 @@ class Users(models.Model):
     class Meta:
         managed = False
         db_table = 'users'
+
+
+class FeedbackSurvey(models.Model):
+    feedback_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('AuthUser', models.DO_NOTHING, blank=True, null=True)
+    likes_app = models.BooleanField(default=False)  # True for like, False for hate
+    selected_reasons = models.JSONField(blank=True, null=True)  # Stores the multi-select options
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = True
+        db_table = 'feedback_survey'

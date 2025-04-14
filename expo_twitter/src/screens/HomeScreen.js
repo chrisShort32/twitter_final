@@ -39,6 +39,10 @@ const HomeScreen = ({ navigation }) => {
     // Navigation is handled by the AuthContext
   };
 
+  const handleFeedbackSurvey = () => {
+    navigation.navigate('FeedbackSurvey');
+  };
+
   useFocusEffect(
     useCallback(() => {
       setRefreshTrigger(prev => prev + 1);
@@ -67,6 +71,14 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Feedback Survey Button */}
+      <TouchableOpacity 
+        style={styles.feedbackButton} 
+        onPress={handleFeedbackSurvey}
+      >
+        <Text style={styles.feedbackButtonText}>Give Feedback</Text>
+      </TouchableOpacity>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -181,6 +193,19 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#1DA1F2',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  feedbackButton: {
+    backgroundColor: '#1DA1F2',
+    marginHorizontal: 15,
+    marginBottom: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  feedbackButtonText: {
+    color: 'white',
     fontWeight: 'bold',
     fontSize: 14,
   },

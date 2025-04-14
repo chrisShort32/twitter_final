@@ -372,3 +372,61 @@ export const toggleFollow = async (username) => {
     return { success: false, error: 'An error occurred while toggling follow status' };
   }
 }; 
+
+/**
+ * Submit user feedback from the survey
+ * @param {Object} feedbackData - Feedback data including likes_app and selected_reasons
+ * @returns {Promise<Object>} - Success or error message
+ */
+export const submitFeedback = async (feedbackData) => {
+  try {
+    const user = await AsyncStorage.getItem('user');
+    const userData = user ? JSON.parse(user) : null;
+    
+    const response = await fetch(`${API_BASE_URL}/feedback/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userData?.token ? { 'Authorization': `Bearer ${userData.token}` } : {}),
+      },
+      body: JSON.stringify(feedbackData),
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data };
+    } else {
+      return { success: false, error: data.error || 'Failed to submit feedback' };
+    }
+  } catch (error) {
+    console.error('Feedback submission error:', error);
+    return { success: false, error: 'An error occurred while submitting feedback' };
+  }
+};
+
+/**
+ * Get feedback statistics for visualization
+ * @returns {Promise<Object>} - Feedback statistics or error
+ */
+export const getFeedbackStats = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/feedback/stats/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data };
+    } else {
+      return { success: false, error: data.error || 'Failed to retrieve feedback statistics' };
+    }
+  } catch (error) {
+    console.error('Feedback statistics retrieval error:', error);
+    return { success: false, error: 'An error occurred while retrieving feedback statistics' };
+  }
+}; 

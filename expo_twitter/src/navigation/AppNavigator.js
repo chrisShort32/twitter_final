@@ -6,6 +6,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
+import FeedbackSurveyScreen from '../screens/FeedbackSurveyScreen';
 import { useAuth } from '../context/AuthContext';
 
 const Stack = createStackNavigator();
@@ -56,6 +57,16 @@ const AppNavigator = () => {
                     },
                   };
                 },
+              }}
+            />
+            <Stack.Screen 
+              name="FeedbackSurvey" 
+              component={FeedbackSurveyScreen} 
+              options={{
+                gestureEnabled: false,
+                animationEnabled: true,
+                detachPreviousScreen: false,
+                presentation: 'card',
               }}
             />
           </>
