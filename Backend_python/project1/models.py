@@ -122,6 +122,15 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 
+class ProfilePics(models.Model):
+    photo_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('AuthUser', models.DO_NOTHING)
+    photo_path = models.TextField()
+    
+    class Meta:
+        managed = True
+        db_table = 'profile_pics'
+
 class Follows(models.Model):
     user = models.OneToOneField('AuthUser', models.DO_NOTHING, primary_key=True)  # The composite primary key (user_id, following_user_id) found, that is not supported. The first column is selected.
     following_user = models.ForeignKey('AuthUser', models.DO_NOTHING, related_name='follows_following_user_set')

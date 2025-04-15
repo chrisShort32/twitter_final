@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Posts, Follows, Likes, Retweets
+from .models import Posts, Follows, Likes, Retweets, ProfilePics
 from rest_framework.response import Response
 from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer
 from rest_framework import status
@@ -173,6 +173,13 @@ def generate_unique_username(base):
         counter += 1
     return username
 
+# Final - check for profile pic
+def profile_pic(user_id):
+    try:
+        user_pic = ProfilePics.objects.get(user_id=user_id)
+        return user_pic.photo_path
+    except ProfilePics.DoesNotExist:
+        return ''
 
 #Final - login/signup with google
 @api_view(['POST'])
@@ -189,7 +196,11 @@ def google_login(request):
 
     try:
         user = User.objects.get(email=email)
-
+        pic = profile_pic(user.id)
+        
+        if pic:
+            picture = pic
+        
     except User.DoesNotExist:
         # Create new user
         username_base = f"{first_name}.{last_name}".lower()
