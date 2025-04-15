@@ -177,8 +177,11 @@ def generate_unique_username(base):
 def profile_pic(user_id):
     try:
         user_pic = ProfilePics.objects.get(user_id=user_id)
-        pic_path = 'http://54.147.244.63:8000/media/' + user_pic.photo_path
-        return pic_path
+        if user_pic.photo_path.startswith('https'):
+            return user_pic.photo_path
+        else:
+            pic_path = 'http://54.147.244.63:8000/media/' + user_pic.photo_path
+            return pic_path
     except ProfilePics.DoesNotExist:
         return ''
 
@@ -202,6 +205,7 @@ def google_login(request):
         if pic:
             picture = pic
         
+        
     except User.DoesNotExist:
         # Create new user
         username_base = f"{first_name}.{last_name}".lower()
@@ -213,6 +217,12 @@ def google_login(request):
             last_name=last_name,
         )
         user.save()
+        picture = ProfilePics.objects.create(
+            user_id=user.id,
+            photo_path=picture
+        )
+        picture.save()
+        
     refresh = RefreshToken.for_user(user)
     return Response({
         'refresh': str(refresh),

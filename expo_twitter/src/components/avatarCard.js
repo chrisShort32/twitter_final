@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { useAuth } from '../context/AuthContext';
+
 
 
 const AvatarCard = ({ user }) => {
-
+  console.log('this is the picture:', user.picture);
   return (
     <View style={styles.container}>
       <Image
