@@ -26,7 +26,8 @@ export const loginUser = async (email, password) => {
     if (response.ok && data.access) {
         const { access, user } = data;
 
-        const pic_data_response = await fetch(`${API_BASE_URL}/profile_pic?user_id=${user.id}`, {
+        console.log('user', user);
+        const pic_data_response = await fetch(`${API_BASE_URL}/profile_pic?user_id=${user.pk}`, {
           method: 'GET',
           headers: {'Content-Type': 'application/json'},
         });
