@@ -187,7 +187,7 @@ def profile_pic(user_id):
 
 @api_view(['GET'])
 def get_profile_pic(request):
-    user_id = request.data.GET.get('user_id')
+    user_id = request.GET.get('user_id')
     pic_path = profile_pic(user_id)
     return Response({'picture': pic_path})
 
