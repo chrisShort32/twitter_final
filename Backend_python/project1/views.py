@@ -185,6 +185,12 @@ def profile_pic(user_id):
     except ProfilePics.DoesNotExist:
         return ''
 
+@api_view(['GET'])
+def get_profile_pic(request):
+    user_id = request.data.GET.get('user_id')
+    pic_path = profile_pic(user_id)
+    return Response({'picture': pic_path})
+
 #Final - login/signup with google
 @api_view(['POST'])
 @permission_classes([AllowAny])
