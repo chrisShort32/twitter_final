@@ -15,6 +15,7 @@ import { getUserProfile, toggleFollow } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import Yeet from '../components/Yeet';
 import FollowButton from '../components/FollowButton';
+import AvatarCard from '../components/avatarCard';
 
 const UserProfileScreen = ({ route, navigation }) => {
   const username = route?.params?.username;
@@ -194,6 +195,7 @@ const UserProfileScreen = ({ route, navigation }) => {
 
       <ScrollView style={styles.container}>
         <View style={styles.headerContainer}>
+          <AvatarCard user={profile}/>
           <Text style={styles.nameText}>{profile.first_name} {profile.last_name}</Text>
           <Text style={styles.usernameText}>@{profile.username}</Text>
         </View>

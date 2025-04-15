@@ -502,6 +502,7 @@ def user_profile(request, username):
             'first_name': profile_user.first_name,
             'last_name': profile_user.last_name,
             'email': profile_user.email,
+            'picture': profile_pic(profile_user.id),
             'date_joined': profile_user.date_joined,
             'is_following': is_following,
             'followers_count': followers_count,

@@ -1,16 +1,16 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 
-const AvatarCard = ({ avatarUrl, username, name }) => {
+const AvatarCard = ({ user }) => {
+  const base_pic_url = 'http://54.147.244.63:8000/media/'
   return (
     <View style={styles.container}>
       <Image
-        source={avatarUrl ? { uri: avatarUrl } : require('../../assets/default-avatar.png')}
+        source={user?.picture ? { uri: base_pic_url + user?.picture } : require('../../assets/y_logo.png')}
         style={styles.avatar}
       />
-      <Text style={styles.username}>@{username}</Text>
-      <Text style={styles.name}>{name}</Text>
     </View>
   );
 };
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#B10DC9', // purple background from your design
+    backgroundColor: '#B10DC9',
     borderRadius: 12,
     marginBottom: 16,
   },
