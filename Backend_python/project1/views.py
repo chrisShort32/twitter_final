@@ -177,7 +177,8 @@ def generate_unique_username(base):
 def profile_pic(user_id):
     try:
         user_pic = ProfilePics.objects.get(user_id=user_id)
-        return user_pic.photo_path
+        pic_path = 'http://54.147.244.63:8000/media/' + user_pic.photo_path
+        return pic_path
     except ProfilePics.DoesNotExist:
         return ''
 

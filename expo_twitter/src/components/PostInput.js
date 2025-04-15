@@ -86,11 +86,11 @@ const PostInput = ({onPostSuccess}) => {
         
   };
 
-  const base_pic_url = 'http://54.147.244.63:8000/media/'
+  
   return (
     <View style={styles.card}>
       <Image
-        source={user?.picture ? { uri: base_pic_url + user?.picture } : require('../../assets/y_logo.png')}
+        source={user?.picture ? { uri: user?.picture } : require('../../assets/y_logo.png')}
         style={styles.avatar}
       />
       <View style={{ flex: 1 }}>

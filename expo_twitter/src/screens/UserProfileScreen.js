@@ -196,8 +196,6 @@ const UserProfileScreen = ({ route, navigation }) => {
       <ScrollView style={styles.container}>
         <View style={styles.headerContainer}>
           <AvatarCard user={profile}/>
-          <Text style={styles.nameText}>{profile.first_name} {profile.last_name}</Text>
-          <Text style={styles.usernameText}>@{profile.username}</Text>
         </View>
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>{profile.bio || 'No bio available'}</Text>
