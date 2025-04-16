@@ -442,47 +442,77 @@ export const getFeedbackStats = async () => {
   try {
     // Use the correct endpoint path for the Django backend
     const apiUrl = `${API_BASE_URL}/feedback/stats/`;
-    console.log(`Fetching feedback statistics from: ${apiUrl}`);
+    console.log(`📊 Fetching feedback statistics from: ${apiUrl}`);
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     
-    console.log(`Feedback stats response status: ${response.status}`);
-    
-    let data;
     try {
-      data = await response.json();
-      console.log('Feedback statistics received:', data);
-    } catch (parseError) {
-      console.error("Error parsing response:", parseError);
-      data = {};
-    }
-    
-    if (response.ok) {
-      if (!data) {
-        console.warn("API returned no data despite OK status");
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      console.log(`📊 Feedback stats response status: ${response.status}`);
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log('📊 Feedback statistics received, data structure:', 
+          JSON.stringify({
+            total_responses: data.total_responses,
+            likes_count: data.likes?.count,
+            dislikes_count: data.dislikes?.count,
+            like_reasons_count: data.likes?.reasons ? Object.keys(data.likes.reasons).length : 0,
+            dislike_reasons_count: data.dislikes?.reasons ? Object.keys(data.dislikes.reasons).length : 0
+          })
+        );
+      } catch (parseError) {
+        console.error("❌ Error parsing response:", parseError);
+        data = {};
         return { 
           success: false, 
-          error: "Server returned empty response"
+          error: `Response parsing error: ${parseError.message}`
         };
       }
-      return { success: true, data };
-    } else {
-      console.error('Error from feedback stats API:', data.error || response.statusText);
-      return { 
-        success: false, 
-        error: data.error || data.message || `Failed to retrieve feedback statistics (${response.status})`
-      };
+      
+      if (response.ok) {
+        if (!data || !data.total_responses) {
+          console.warn("⚠️ API returned no data or invalid structure despite OK status");
+          return { 
+            success: false, 
+            error: "Server returned invalid data structure"
+          };
+        }
+        return { success: true, data };
+      } else {
+        console.error('❌ Error from feedback stats API:', data.error || response.statusText);
+        return { 
+          success: false, 
+          error: data.error || data.message || `Failed to retrieve feedback statistics (${response.status})`
+        };
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ Feedback stats request timed out');
+        return {
+          success: false,
+          error: 'Request timed out. Server took too long to respond.'
+        };
+      }
+      throw fetchError; // Re-throw for outer catch
     }
   } catch (error) {
-    console.error('Feedback statistics retrieval error:', error);
+    console.error('❌ Feedback statistics retrieval error:', error);
     return { 
       success: false, 
-      error: `An error occurred while retrieving feedback statistics: ${error.message || error}`
+      error: `Network error: ${error.message || 'Unknown error'}`
     };
   }
 }; 

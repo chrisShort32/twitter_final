@@ -23,25 +23,26 @@ LogBox.ignoreLogs([
 
 const { width } = Dimensions.get('window');
 
-// Test data in case the backend doesn't respond - used as a fallback
+// Test data in case the backend doesn't respond - used as a fallback, aligned with real DB
 const TEST_DATA = {
-  total_responses: 6,
+  total_responses: 14,
   likes: {
-    count: 5,
+    count: 11,
     reasons: {
-      "User Interface": 3,
-      "Ease of Use": 4, 
-      "Social Interaction": 2,
-      "Search Functionality": 3,
+      "User Interface": 6,
+      "Ease of Use": 5,
+      "Social Interaction": 3,
+      "Search Functionality": 5,
       "Content Quality": 2,
-      "Notifications": 1
+      "Performance": 5,
+      "Features": 3
     }
   },
   dislikes: {
-    count: 1,
+    count: 3,
     reasons: {
       "Too Many Notifications": 1,
-      "Poor Search Results": 1,
+      "Poor Search Results": 2,
       "Limited Customization": 1
     }
   }
@@ -49,14 +50,14 @@ const TEST_DATA = {
 
 const FeedbackResultsScreen = () => {
   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(false); // Start with false to prevent initial loading state
+  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading indicator
   const [error, setError] = useState(null);
-  const [statsData, setStatsData] = useState(TEST_DATA); // Initialize with test data immediately
+  const [statsData, setStatsData] = useState(null); // Start with null to force API fetch
   const [activeView, setActiveView] = useState('overview'); 
   const mountTimeRef = useRef(Date.now());
   const fetchAttemptsRef = useRef(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoadedAnyData, setHasLoadedAnyData] = useState(true); // Start as true since we have test data
+  const [hasLoadedAnyData, setHasLoadedAnyData] = useState(false);
   const [chartKey, setChartKey] = useState(Date.now()); // Key to force chart re-renders
   
   // Helper to refresh data with visual indicator
@@ -86,8 +87,7 @@ const FeedbackResultsScreen = () => {
       // Force refresh of charts by updating the key
       setChartKey(Date.now());
       
-      // Then try to get real data
-      console.log("🔄 Refreshing in background");
+      // Fetch fresh data
       refreshData(false);
       
       // Set up refresh interval
@@ -115,19 +115,22 @@ const FeedbackResultsScreen = () => {
       try {
         // Try to get real data first
         const result = await getFeedbackStats();
-        if (result && result.success) {
-          console.log('✅ Initial fetch successful');
+        if (result && result.success && result.data) {
+          console.log('✅ Initial fetch successful:', result.data);
           setStatsData(result.data);
+          setHasLoadedAnyData(true);
           setError(null);
         } else {
-          console.warn('⚠️ Initial fetch returned error, using test data');
+          console.warn('⚠️ Initial fetch returned error, using test data:', result?.error);
           setStatsData(TEST_DATA);
           setError("Using sample data (server error)");
+          setHasLoadedAnyData(true);
         }
       } catch (err) {
         console.error('❌ Initial fetch failed:', err);
         setStatsData(TEST_DATA);
         setError("Using sample data (connection error)");
+        setHasLoadedAnyData(true);
       } finally {
         setIsLoading(false);
         // Force chart re-render
@@ -138,12 +141,17 @@ const FeedbackResultsScreen = () => {
     // Execute initial fetch
     initialFetch();
     
-    // Set a backup timer to make sure we render something
+    // Set a backup timer to make sure we render something if API is slow
     const forceRenderTimer = setTimeout(() => {
       console.log('⏱️ Force render timer triggered');
+      if (!hasLoadedAnyData) {
+        console.log('⚠️ No data loaded yet, using test data as fallback');
+        setStatsData(TEST_DATA);
+        setHasLoadedAnyData(true);
+        setIsLoading(false);
+      }
       setChartKey(Date.now() + 2);
-      setIsLoading(false);
-    }, 2000);
+    }, 3000); // Shorter timeout
     
     return () => {
       console.log(`📊 Results screen unmounting, was mounted at ${mountTimeRef.current}`);
@@ -161,23 +169,27 @@ const FeedbackResultsScreen = () => {
       const result = await getFeedbackStats();
       
       // Log abbreviated response to avoid console spam
-      if (result.success) {
+      if (result.success && result.data) {
         console.log(`✅ Stats fetch attempt ${currentAttempt} successful!`);
         
         // Only update state if this is still the latest request
         if (currentAttempt === fetchAttemptsRef.current) {
           setStatsData(result.data);
+          setHasLoadedAnyData(true);
           setError(null);
           setIsLoading(false);
           // Force chart re-render
           setChartKey(Date.now());
+          console.log(`📈 Updated stats data:`, result.data);
         }
       } else {
-        console.error(`❌ Stats fetch attempt ${currentAttempt} failed:`, result.error);
+        console.error(`❌ Stats fetch attempt ${currentAttempt} failed:`, result?.error);
         
         // Only update error message, keep showing old or test data
-        if (currentAttempt === fetchAttemptsRef.current) {
-          setError("Could not get latest data from server");
+        if (currentAttempt === fetchAttemptsRef.current && !statsData) {
+          setStatsData(TEST_DATA);
+          setHasLoadedAnyData(true);
+          setError("Using sample data - Could not get latest data from server");
           setIsLoading(false);
         }
       }
@@ -185,8 +197,10 @@ const FeedbackResultsScreen = () => {
       console.error(`❌ Stats fetch attempt ${currentAttempt} exception:`, err);
       
       // Only update error message, keep showing old or test data
-      if (currentAttempt === fetchAttemptsRef.current) {
-        setError(`Connection error: ${err.message || 'Unknown error'}`);
+      if (currentAttempt === fetchAttemptsRef.current && !statsData) {
+        setStatsData(TEST_DATA);
+        setHasLoadedAnyData(true);
+        setError(`Using sample data - Connection error: ${err.message || 'Unknown error'}`);
         setIsLoading(false);
       }
     }
@@ -200,17 +214,11 @@ const FeedbackResultsScreen = () => {
   const safeStatsData = statsData || TEST_DATA;
 
   const renderOverview = () => {
-    // Skip loading state and show test data
-    if (!safeStatsData) {
+    if (isLoading && !hasLoadedAnyData) {
       return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Preparing feedback data...</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => refreshData()}
-          >
-            <Text style={styles.retryButtonText}>Refresh Data</Text>
-          </TouchableOpacity>
+        <View style={styles.loadingView}>
+          <ActivityIndicator size="large" color="#1DA1F2" />
+          <Text style={styles.loadingText}>Loading statistics...</Text>
         </View>
       );
     }
@@ -222,14 +230,20 @@ const FeedbackResultsScreen = () => {
     const dislikesCount = dislikes?.count || 0;
     
     const pieChartData = [
-      { x: 'Like', y: likesCount || 1, color: '#1DA1F2' }, // Always at least 1 to prevent empty chart
-      { x: 'Dislike', y: dislikesCount || 1, color: '#E0245E' }, // Always at least 1 to prevent empty chart
+      { x: 'Like', y: likesCount, color: '#1DA1F2' },
+      { x: 'Dislike', y: dislikesCount, color: '#E0245E' },
     ];
+    
+    // If no data or all zeros, show placeholder data
+    if (likesCount === 0 && dislikesCount === 0) {
+      pieChartData[0].y = 1;
+      pieChartData[1].y = 1;
+    }
     
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Overall Feedback</Text>
-        <Text style={styles.chartSubtitle}>Total Responses: {total_responses || "Loading..."}</Text>
+        <Text style={styles.chartSubtitle}>Total Responses: {total_responses || 0}</Text>
         
         {isRefreshing && (
           <View style={styles.refreshIndicator}>
@@ -292,9 +306,19 @@ const FeedbackResultsScreen = () => {
   };
 
   const renderReasonChart = (type) => {
+    if (isLoading && !hasLoadedAnyData) {
+      return (
+        <View style={styles.loadingView}>
+          <ActivityIndicator size="large" color="#1DA1F2" />
+          <Text style={styles.loadingText}>Loading statistics...</Text>
+        </View>
+      );
+    }
+    
     if (!safeStatsData) return null;
     
     const data = type === 'likes' ? safeStatsData.likes?.reasons : safeStatsData.dislikes?.reasons;
+    console.log(`📊 Rendering ${type} chart with data:`, data);
     
     // Always have some data to show
     const fallbackData = type === 'likes' 
@@ -306,7 +330,7 @@ const FeedbackResultsScreen = () => {
     if (!reasonsData || Object.keys(reasonsData).length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No data available</Text>
+          <Text style={styles.emptyText}>No data available for {type === 'likes' ? 'likes' : 'dislikes'}</Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={() => refreshData()}
@@ -317,11 +341,21 @@ const FeedbackResultsScreen = () => {
       );
     }
     
-    // Convert object to array and sort by count
+    // Convert object to array, sort by count, and limit to top 5
     const sortedData = Object.entries(reasonsData)
       .map(([reason, count]) => ({ reason, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5); // Show top 5 reasons
+    
+    console.log(`📊 Sorted ${type} data:`, sortedData);
+    
+    // Ensure we have valid data for the chart
+    if (sortedData.length === 0) {
+      sortedData.push({ reason: 'No data', count: 1 });
+    }
+    
+    // Create a fixed domain for the chart to prevent jumpy rendering
+    const maxCount = Math.max(...sortedData.map(item => item.count), 3); // At least 3 for scale
     
     return (
       <View style={styles.chartContainer}>
@@ -345,6 +379,7 @@ const FeedbackResultsScreen = () => {
             height={300}
             domainPadding={{ x: 30 }}
             theme={VictoryTheme.material}
+            domain={{ y: [0, maxCount + 1] }}
             animate={{
               duration: 500,
               onLoad: { duration: 300 }
@@ -359,7 +394,7 @@ const FeedbackResultsScreen = () => {
             />
             <VictoryAxis
               dependentAxis
-              tickFormat={(t) => `${t}`}
+              tickValues={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(n => n <= maxCount + 1)}
               style={{
                 axis: { stroke: '#E1E8ED' },
                 grid: { stroke: '#F5F8FA' },
@@ -418,60 +453,69 @@ const FeedbackResultsScreen = () => {
           <Text style={styles.title}>Feedback Results</Text>
           <Text style={styles.subtitle}>See what other users think about our app</Text>
           
-          <View style={styles.tabBar}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeView === 'overview' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveView('overview')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeView === 'overview' && styles.tabTextActive,
-                ]}
-              >
-                Overview
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeView === 'likes' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveView('likes')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeView === 'likes' && styles.tabTextActive,
-                ]}
-              >
-                Likes
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeView === 'dislikes' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveView('dislikes')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeView === 'dislikes' && styles.tabTextActive,
-                ]}
-              >
-                Dislikes
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          {activeView === 'overview' && renderOverview()}
-          {activeView === 'likes' && renderReasonChart('likes')}
-          {activeView === 'dislikes' && renderReasonChart('dislikes')}
+          {isLoading && !hasLoadedAnyData ? (
+            <View style={styles.fullLoadingContainer}>
+              <ActivityIndicator size="large" color="#1DA1F2" />
+              <Text style={styles.loadingText}>Loading feedback data...</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.tabBar}>
+                <TouchableOpacity
+                  style={[
+                    styles.tabButton,
+                    activeView === 'overview' && styles.tabButtonActive,
+                  ]}
+                  onPress={() => setActiveView('overview')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeView === 'overview' && styles.tabTextActive,
+                    ]}
+                  >
+                    Overview
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.tabButton,
+                    activeView === 'likes' && styles.tabButtonActive,
+                  ]}
+                  onPress={() => setActiveView('likes')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeView === 'likes' && styles.tabTextActive,
+                    ]}
+                  >
+                    Likes
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.tabButton,
+                    activeView === 'dislikes' && styles.tabButtonActive,
+                  ]}
+                  onPress={() => setActiveView('dislikes')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeView === 'dislikes' && styles.tabTextActive,
+                    ]}
+                  >
+                    Dislikes
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              
+              {activeView === 'overview' && renderOverview()}
+              {activeView === 'likes' && renderReasonChart('likes')}
+              {activeView === 'dislikes' && renderReasonChart('dislikes')}
+            </>
+          )}
           
           <TouchableOpacity
             style={styles.doneButton}
@@ -479,6 +523,26 @@ const FeedbackResultsScreen = () => {
           >
             <Text style={styles.doneButtonText}>Done</Text>
           </TouchableOpacity>
+          
+          {/* Manual refresh option for all screens */}
+          {!isLoading && (
+            <TouchableOpacity
+              style={styles.manualRefreshButton}
+              onPress={() => {
+                Alert.alert(
+                  "Refresh Data",
+                  "Fetching latest feedback data from server...",
+                  [{ text: "OK" }],
+                  { cancelable: true }
+                );
+                refreshData(true);
+              }}
+            >
+              <Text style={styles.manualRefreshText}>
+                Refresh All Data
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -716,6 +780,25 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   doneButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  fullLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 400,
+  },
+  manualRefreshButton: {
+    backgroundColor: '#1DA1F2',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    marginTop: 20,
+  },
+  manualRefreshText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
