@@ -36,38 +36,47 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
       
       console.log('🚀 Submitting feedback to backend:', JSON.stringify(feedback, null, 2));
       
-      // Set a timeout to move to next screen regardless of API response
-      const timeoutId = setTimeout(() => {
-        console.log('⏱️ Submission timeout - moving to results anyway');
-        setIsSubmitting(false);
-        onSwipeNext();
-      }, 3000);
-      
+      // Attempt to submit feedback
       try {
         const result = await submitFeedback(feedback);
-        clearTimeout(timeoutId);
-        
         console.log('📦 Feedback submission result:', JSON.stringify(result, null, 2));
         
-        // If result exists and has success property true
         if (result && result.success) {
           console.log('✅ Feedback submitted successfully, moving to results screen');
-          // Move directly to results without showing alert
-          onSwipeNext();
+          // Short pause to ensure server has time to process before we fetch results
+          setTimeout(() => {
+            setIsSubmitting(false);
+            onSwipeNext();
+          }, 800);
         } else {
           console.error('❌ Feedback submission failed:', result ? result.error : 'Unknown error');
-          // Just move to results anyway
-          onSwipeNext();
+          setError(result?.error || 'Failed to submit feedback');
+          
+          // Move to results anyway after a delay
+          setTimeout(() => {
+            setIsSubmitting(false);
+            onSwipeNext();
+          }, 1500);
         }
       } catch (fetchError) {
         console.error('❌ Network error during feedback submission:', fetchError);
-        // Just move to results anyway - the timeout will handle this
+        setError('Network error: ' + (fetchError.message || 'Failed to connect to server'));
+        
+        // Move to results anyway after a longer delay
+        setTimeout(() => {
+          setIsSubmitting(false);
+          onSwipeNext();
+        }, 2000);
       }
     } catch (err) {
       console.error('❌ Unexpected error during feedback submission:', err);
-      // Move to results anyway
-      setIsSubmitting(false);
-      onSwipeNext();
+      setError('An unexpected error occurred: ' + (err.message || err));
+      
+      // Move to results anyway after a delay
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onSwipeNext();
+      }, 1500);
     }
   };
 

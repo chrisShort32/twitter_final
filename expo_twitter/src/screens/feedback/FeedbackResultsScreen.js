@@ -107,16 +107,47 @@ const FeedbackResultsScreen = () => {
   useEffect(() => {
     console.log(`📊 Results screen mounted at ${mountTimeRef.current}`);
     
-    // Force chart render
-    setTimeout(() => {
-      setChartKey(Date.now());
-    }, 300);
+    // Force immediate data fetch
+    const initialFetch = async () => {
+      console.log('📊 Initial data fetch on mount...');
+      setIsLoading(true);
+      
+      try {
+        // Try to get real data first
+        const result = await getFeedbackStats();
+        if (result && result.success) {
+          console.log('✅ Initial fetch successful');
+          setStatsData(result.data);
+          setError(null);
+        } else {
+          console.warn('⚠️ Initial fetch returned error, using test data');
+          setStatsData(TEST_DATA);
+          setError("Using sample data (server error)");
+        }
+      } catch (err) {
+        console.error('❌ Initial fetch failed:', err);
+        setStatsData(TEST_DATA);
+        setError("Using sample data (connection error)");
+      } finally {
+        setIsLoading(false);
+        // Force chart re-render
+        setChartKey(Date.now() + 1);
+      }
+    };
     
-    // Then try to get real data
-    refreshData(false);
+    // Execute initial fetch
+    initialFetch();
+    
+    // Set a backup timer to make sure we render something
+    const forceRenderTimer = setTimeout(() => {
+      console.log('⏱️ Force render timer triggered');
+      setChartKey(Date.now() + 2);
+      setIsLoading(false);
+    }, 2000);
     
     return () => {
       console.log(`📊 Results screen unmounting, was mounted at ${mountTimeRef.current}`);
+      clearTimeout(forceRenderTimer);
     };
   }, []);
 

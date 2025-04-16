@@ -137,13 +137,25 @@ const FeedbackSurveyScreen = () => {
     // Clear any existing timeouts
     if (timeoutId) clearTimeout(timeoutId);
     
-    // Generate a new key and force transition
+    // First show loading state
+    setIsLoading(true);
+    
+    // Generate a new key and force transition with delay
     const newKey = Date.now();
     setResultsKey(newKey);
+    console.log(`📊 Preparing results screen with key: ${newKey}`);
     
-    // Just go directly to results without loading screen
-    setCurrentScreen(3);
-    setIsLoading(false);
+    // Small delay ensures context is properly passed
+    setTimeout(() => {
+      // Set screen index first
+      setCurrentScreen(3);
+      
+      // Then after a brief delay, finish loading to ensure render completes
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log("✅ Completed transition to results screen");
+      }, 300);
+    }, 100);
   };
 
   // Button component to force navigate to results if stuck
