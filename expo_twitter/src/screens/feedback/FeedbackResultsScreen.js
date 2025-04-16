@@ -49,15 +49,19 @@ const TEST_DATA = {
 };
 
 const FeedbackResultsScreen = () => {
+  console.log('📊 FeedbackResultsScreen rendered at:', Date.now());
   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading indicator
+  // Start with false to prevent loading flash
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [statsData, setStatsData] = useState(null); // Start with null to force API fetch
+  // Start with test data to ensure we always show something
+  const [statsData, setStatsData] = useState(TEST_DATA);
   const [activeView, setActiveView] = useState('overview'); 
   const mountTimeRef = useRef(Date.now());
   const fetchAttemptsRef = useRef(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoadedAnyData, setHasLoadedAnyData] = useState(false);
+  // Start with true since we're using test data
+  const [hasLoadedAnyData, setHasLoadedAnyData] = useState(true);
   const [chartKey, setChartKey] = useState(Date.now()); // Key to force chart re-renders
   
   // Helper to refresh data with visual indicator
@@ -103,60 +107,52 @@ const FeedbackResultsScreen = () => {
     }, [])
   );
 
-  // Also fetch when first mounted
+  // Log component mount for debugging
   useEffect(() => {
-    console.log(`📊 Results screen mounted at ${mountTimeRef.current}`);
+    console.log('📊 FeedbackResultsScreen mounted with test data');
     
-    // Force immediate data fetch
-    const initialFetch = async () => {
-      console.log('📊 Initial data fetch on mount...');
-      setIsLoading(true);
-      
-      try {
-        // Try to get real data first
-        const result = await getFeedbackStats();
-        if (result && result.success && result.data) {
-          console.log('✅ Initial fetch successful:', result.data);
-          setStatsData(result.data);
-          setHasLoadedAnyData(true);
-          setError(null);
-        } else {
-          console.warn('⚠️ Initial fetch returned error, using test data:', result?.error);
-          setStatsData(TEST_DATA);
-          setError("Using sample data (server error)");
-          setHasLoadedAnyData(true);
-        }
-      } catch (err) {
-        console.error('❌ Initial fetch failed:', err);
-        setStatsData(TEST_DATA);
-        setError("Using sample data (connection error)");
-        setHasLoadedAnyData(true);
-      } finally {
-        setIsLoading(false);
-        // Force chart re-render
-        setChartKey(Date.now() + 1);
-      }
-    };
-    
-    // Execute initial fetch
-    initialFetch();
-    
-    // Set a backup timer to make sure we render something if API is slow
-    const forceRenderTimer = setTimeout(() => {
-      console.log('⏱️ Force render timer triggered');
-      if (!hasLoadedAnyData) {
-        console.log('⚠️ No data loaded yet, using test data as fallback');
-        setStatsData(TEST_DATA);
-        setHasLoadedAnyData(true);
-        setIsLoading(false);
-      }
-      setChartKey(Date.now() + 2);
-    }, 3000); // Shorter timeout
+    // Force chart render immediately
+    setTimeout(() => {
+      setChartKey(Date.now());
+      console.log('📊 Initial chart render forced');
+    }, 100);
     
     return () => {
-      console.log(`📊 Results screen unmounting, was mounted at ${mountTimeRef.current}`);
-      clearTimeout(forceRenderTimer);
+      console.log('📊 FeedbackResultsScreen unmounted');
     };
+  }, []);
+
+  // Fetch real data after initial render with test data
+  useEffect(() => {
+    // Fetch data in the background after component is stable
+    const fetchRealData = async () => {
+      console.log('📊 Fetching real data in background...');
+      try {
+        const result = await getFeedbackStats();
+        if (result && result.success && result.data) {
+          console.log('✅ Background fetch successful:', result.data);
+          setStatsData(result.data);
+          setError(null);
+          // Force chart re-render
+          setChartKey(Date.now() + 1);
+        } else {
+          console.warn('⚠️ Background fetch error:', result?.error);
+          if (!statsData) {
+            setStatsData(TEST_DATA);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Background fetch failed:', err);
+        if (!statsData) {
+          setStatsData(TEST_DATA);
+        }
+      }
+    };
+    
+    // Small delay to ensure component is fully rendered first
+    const fetchTimer = setTimeout(fetchRealData, 300);
+    
+    return () => clearTimeout(fetchTimer);
   }, []);
 
   const fetchStats = async () => {

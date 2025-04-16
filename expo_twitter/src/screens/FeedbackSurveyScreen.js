@@ -92,6 +92,19 @@ const FeedbackSurveyScreen = () => {
       
       // Ensure we're not in loading state
       setIsLoading(false);
+      
+      // Safety mechanism - check if results screen is visible after a delay
+      const safetyCheck = setTimeout(() => {
+        console.log('🔍 Safety check for results screen visibility');
+        // If we're still on screen 3 but having issues, force a remount
+        if (currentScreen === 3) {
+          const refreshKey = Date.now();
+          console.log(`🔄 Safety refresh of results screen with key: ${refreshKey}`);
+          setResultsKey(refreshKey);
+        }
+      }, 2000);
+      
+      return () => clearTimeout(safetyCheck);
     }
   }, [currentScreen]);
 
@@ -137,25 +150,30 @@ const FeedbackSurveyScreen = () => {
     // Clear any existing timeouts
     if (timeoutId) clearTimeout(timeoutId);
     
-    // First show loading state
-    setIsLoading(true);
-    
-    // Generate a new key and force transition with delay
-    const newKey = Date.now();
-    setResultsKey(newKey);
-    console.log(`📊 Preparing results screen with key: ${newKey}`);
-    
-    // Small delay ensures context is properly passed
-    setTimeout(() => {
-      // Set screen index first
+    try {
+      // First show loading state
+      setIsLoading(true);
+      
+      // Generate a new key and force transition with delay
+      const newKey = Date.now();
+      setResultsKey(newKey);
+      console.log(`📊 Preparing results screen with key: ${newKey}`);
+      
+      // Immediate transition followed by delayed loading completion
+      // This prevents the blank screen issue
       setCurrentScreen(3);
       
-      // Then after a brief delay, finish loading to ensure render completes
+      // Brief delay before finishing loading
       setTimeout(() => {
-        setIsLoading(false);
         console.log("✅ Completed transition to results screen");
-      }, 300);
-    }, 100);
+        setIsLoading(false);
+      }, 500);
+    } catch (err) {
+      console.error("❌ Error during navigation to results:", err);
+      // Fallback to ensure we don't get stuck
+      setCurrentScreen(3);
+      setIsLoading(false);
+    }
   };
 
   // Button component to force navigate to results if stuck
