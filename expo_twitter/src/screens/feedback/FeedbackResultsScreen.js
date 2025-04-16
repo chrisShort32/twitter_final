@@ -10,7 +10,6 @@ import {
   ScrollView,
   LogBox,
   Alert,
-  Image,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { VictoryPie, VictoryBar, VictoryChart, VictoryTheme, VictoryAxis } from 'victory-native';
@@ -206,11 +205,9 @@ const FeedbackResultsScreen = () => {
         <View style={styles.loadingView}>
           <ActivityIndicator size="large" color="#1DA1F2" />
           <Text style={styles.loadingText}>Loading statistics...</Text>
-          <Image 
-            source={require('../../../assets/chart-loading.gif')} 
-            style={styles.loadingImage}
-            resizeMode="contain"
-          />
+          <View style={styles.loadingAnimation}>
+            <ActivityIndicator size="large" color="#E0245E" />
+          </View>
         </View>
       );
     }
@@ -553,10 +550,10 @@ const styles = StyleSheet.create({
     height: 300,
     width: '100%',
   },
-  loadingImage: {
-    width: 200,
-    height: 120,
+  loadingAnimation: {
     marginTop: 20,
+    paddingHorizontal: 20,
+    height: 100,
   },
   errorContainer: {
     flex: 1,
