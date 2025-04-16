@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Posts, Follows, Likes, Retweets, FeedbackSurvey
+from .models import Posts, Follows, Likes, Retweets, FeedbackSurvey, ProfilePics
 from rest_framework.response import Response
 from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer, FeedbackSerializer
 from rest_framework import status
@@ -173,6 +173,23 @@ def generate_unique_username(base):
         counter += 1
     return username
 
+# Final - check for profile pic
+def profile_pic(user_id):
+    try:
+        user_pic = ProfilePics.objects.get(user_id=user_id)
+        if user_pic.photo_path.startswith('https'):
+            return user_pic.photo_path
+        else:
+            pic_path = 'http://54.147.244.63:8000/media/' + user_pic.photo_path
+            return pic_path
+    except ProfilePics.DoesNotExist:
+        return ''
+
+@api_view(['GET'])
+def get_profile_pic(request):
+    user_id = request.GET.get('user_id')
+    pic_path = profile_pic(user_id)
+    return Response({'picture': pic_path})
 
 #Final - login/signup with google
 @api_view(['POST'])
@@ -189,7 +206,12 @@ def google_login(request):
 
     try:
         user = User.objects.get(email=email)
-
+        pic = profile_pic(user.id)
+        
+        if pic:
+            picture = pic
+        
+        
     except User.DoesNotExist:
         # Create new user
         username_base = f"{first_name}.{last_name}".lower()
@@ -201,6 +223,12 @@ def google_login(request):
             last_name=last_name,
         )
         user.save()
+        picture = ProfilePics.objects.create(
+            user_id=user.id,
+            photo_path=picture
+        )
+        picture.save()
+        
     refresh = RefreshToken.for_user(user)
     return Response({
         'refresh': str(refresh),
@@ -491,6 +519,7 @@ def user_profile(request, username):
             'first_name': profile_user.first_name,
             'last_name': profile_user.last_name,
             'email': profile_user.email,
+            'picture': profile_pic(profile_user.id),
             'date_joined': profile_user.date_joined,
             'is_following': is_following,
             'followers_count': followers_count,

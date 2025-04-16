@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 from .views import PostInfoView, AllUsersView, AllFollowsView, google_login
 urlpatterns = [
@@ -18,6 +20,7 @@ urlpatterns = [
     path('api/reyeet_unreyeet/', views.reyeet_toggle, name='reyeet_toggle'),
     path('api/post_yeet/', views.yeet, name='yeet'),
     path('api/user_posts/<str:username>/', views.get_user_posts, name='get_user_posts'),
+    path('api/profile_pic/', views.get_profile_pic, name='profile_pic'),
     path('search_users/', views.search_users, name='search_users'),
     path('user_profile/<str:username>/', views.user_profile, name='user_profile'),
     path('follow_toggle/', views.follow_toggle, name='follow_toggle'),
@@ -25,4 +28,4 @@ urlpatterns = [
     # Feedback survey endpoints
     path('api/feedback/', views.submit_feedback, name='submit_feedback'),
     path('api/feedback/stats/', views.get_feedback_stats, name='get_feedback_stats'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
