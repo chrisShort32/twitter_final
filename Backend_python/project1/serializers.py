@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Posts, Follows, Likes, Retweets
+from .models import Posts, Follows, Likes, Retweets, FeedbackSurvey
 from django.contrib.auth.models import User
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -28,3 +28,16 @@ class RetweetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Retweets
         fields = '__all__'
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = FeedbackSurvey
+        fields = ['feedback_id', 'user', 'username', 'likes_app', 'selected_reasons', 'created_at']
+        read_only_fields = ['feedback_id', 'created_at']
+    
+    def get_username(self, obj):
+        if obj.user:
+            return obj.user.username
+        return None

@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from django.shortcuts import render
-from .models import Posts, Follows, Likes, Retweets, ProfilePics
+from .models import Posts, Follows, Likes, Retweets, FeedbackSurvey, ProfilePics
 from rest_framework.response import Response
-from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer
+from .serializers import UserSerializer, PostSerializer, FollowSerializer, LikeSerializer, RetweetSerializer, FeedbackSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.http import JsonResponse
@@ -573,6 +573,77 @@ def follow_toggle(request):
         return Response({'error': 'User not found'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+def submit_feedback(request):
+    """
+    Submit user feedback from the app survey
+    """
+    user = request.user if request.user.is_authenticated else None
+    
+    try:
+        data = {
+            'user': user.id if user else None,
+            'likes_app': request.data.get('likes_app', False),
+            'selected_reasons': request.data.get('selected_reasons', [])
+        }
+        
+        serializer = FeedbackSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_feedback_stats(request):
+    """
+    Get feedback statistics for visualization
+    """
+    try:
+        # Count total likes and dislikes
+        total_likes = FeedbackSurvey.objects.filter(likes_app=True).count()
+        total_dislikes = FeedbackSurvey.objects.filter(likes_app=False).count()
+        
+        # Aggregate reasons for likes
+        like_reasons = {}
+        dislike_reasons = {}
+        
+        # Process likes
+        like_feedback = FeedbackSurvey.objects.filter(likes_app=True)
+        for feedback in like_feedback:
+            if feedback.selected_reasons:
+                for reason in feedback.selected_reasons:
+                    if reason in like_reasons:
+                        like_reasons[reason] += 1
+                    else:
+                        like_reasons[reason] = 1
+        
+        # Process dislikes
+        dislike_feedback = FeedbackSurvey.objects.filter(likes_app=False)
+        for feedback in dislike_feedback:
+            if feedback.selected_reasons:
+                for reason in feedback.selected_reasons:
+                    if reason in dislike_reasons:
+                        dislike_reasons[reason] += 1
+                    else:
+                        dislike_reasons[reason] = 1
+        
+        # Return the statistics
+        return Response({
+            'total_responses': total_likes + total_dislikes,
+            'likes': {
+                'count': total_likes,
+                'reasons': like_reasons
+            },
+            'dislikes': {
+                'count': total_dislikes,
+                'reasons': dislike_reasons
+            }
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
