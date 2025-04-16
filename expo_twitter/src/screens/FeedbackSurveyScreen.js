@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Dimensions,
   Animated,
   PanResponder,
+  Text,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -22,8 +23,20 @@ const FeedbackSurveyScreen = () => {
     likesApp: null,
     selectedOptions: [],
   });
+  const [resultsKey, setResultsKey] = useState(Date.now());
   
   const position = useRef(new Animated.Value(0)).current;
+  
+  // Log whenever screen changes for debugging
+  useEffect(() => {
+    console.log(`Current screen changed to: ${currentScreen}`);
+    
+    // When switching to results screen, update the key to force a re-render
+    if (currentScreen === 3) {
+      setResultsKey(Date.now());
+      console.log("Updated results screen key to force refresh");
+    }
+  }, [currentScreen]);
   
   const panResponder = useRef(
     PanResponder.create({
@@ -71,9 +84,9 @@ const FeedbackSurveyScreen = () => {
       // From options screen - store selected reasons
       setFeedbackData({ ...feedbackData, selectedOptions: data });
     }
-    // When moving from submit screen to results, no data needs to be stored
     
-    console.log(`Moving from screen ${currentScreen} to ${currentScreen + 1}`);
+    console.log(`Moving from screen ${currentScreen} to ${currentScreen + 1}`, 
+      currentScreen === 2 ? "This is the critical transition to results!" : "");
     
     // Animate to the next screen
     Animated.timing(position, {
@@ -82,11 +95,12 @@ const FeedbackSurveyScreen = () => {
       useNativeDriver: true,
     }).start(() => {
       position.setValue(0);
-      setCurrentScreen(currentScreen + 1);
+      setCurrentScreen(prevScreen => prevScreen + 1);
       
       // If moving to the results screen, ensure it's fully visible
       if (currentScreen === 2) {
-        console.log("Transitioning to results screen");
+        console.log("Transitioning to results screen - updating results key");
+        setResultsKey(Date.now());
       }
     });
   };
@@ -110,9 +124,9 @@ const FeedbackSurveyScreen = () => {
           />
         );
       case 3:
-        return <FeedbackResultsScreen />;
+        return <FeedbackResultsScreen key={resultsKey} />;
       default:
-        return null;
+        return <Text style={styles.errorText}>Error: Invalid screen index</Text>;
     }
   };
   
@@ -140,6 +154,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: width,
   },
+  errorText: {
+    flex: 1,
+    textAlign: 'center',
+    color: 'red',
+    fontSize: 16,
+    marginTop: 50,
+  }
 });
 
 export default FeedbackSurveyScreen; 

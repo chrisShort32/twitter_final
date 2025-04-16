@@ -391,13 +391,26 @@ export const submitFeedback = async (feedbackData) => {
       headers.Authorization = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${API_BASE_URL}/feedback/submit/`, {
+    // Log the full API URL for debugging
+    const apiUrl = `${API_BASE_URL}/feedback/submit/`;
+    console.log(`Submitting feedback to: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers,
       body: JSON.stringify(feedbackData),
     });
     
-    const data = await response.json().catch(() => ({}));
+    console.log(`Feedback submission response status: ${response.status}`);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log("Response data:", data);
+    } catch (parseError) {
+      console.error("Error parsing response:", parseError);
+      data = {};
+    }
     
     if (!response.ok) {
       console.error("Feedback submission failed:", response.status, data);
@@ -424,18 +437,36 @@ export const submitFeedback = async (feedbackData) => {
  */
 export const getFeedbackStats = async () => {
   try {
-    console.log('Fetching feedback statistics from API...');
-    const response = await fetch(`${API_BASE_URL}/feedback/stats/`, {
+    // Log the full API URL for debugging
+    const apiUrl = `${API_BASE_URL}/feedback/stats/`;
+    console.log(`Fetching feedback statistics from: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
     
-    const data = await response.json().catch(() => ({}));
-    console.log('Feedback statistics received:', data);
+    console.log(`Feedback stats response status: ${response.status}`);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('Feedback statistics received:', data);
+    } catch (parseError) {
+      console.error("Error parsing response:", parseError);
+      data = {};
+    }
     
     if (response.ok) {
+      if (!data) {
+        console.warn("API returned no data despite OK status");
+        return { 
+          success: false, 
+          error: "Server returned empty response"
+        };
+      }
       return { success: true, data };
     } else {
       console.error('Error from feedback stats API:', data.error || response.statusText);

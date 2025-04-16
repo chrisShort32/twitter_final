@@ -8,10 +8,14 @@ import {
   Dimensions,
   ActivityIndicator,
   ScrollView,
+  LogBox,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { VictoryPie, VictoryBar, VictoryChart, VictoryTheme, VictoryAxis } from 'victory-native';
 import { getFeedbackStats } from '../../api/authApi';
+
+// Ignore warnings that might be related to VictoryChart rendering
+LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
 
 const { width } = Dimensions.get('window');
 
@@ -21,25 +25,40 @@ const FeedbackResultsScreen = () => {
   const [error, setError] = useState(null);
   const [statsData, setStatsData] = useState(null);
   const [activeView, setActiveView] = useState('overview'); // 'overview', 'likes', 'dislikes'
+  const [mountTime] = useState(Date.now()); // Used to track component mount time
 
   // Fetch stats when component mounts AND set up refresh interval
   useEffect(() => {
-    console.log("Results screen is mounting");
+    console.log(`Results screen is mounting at ${mountTime}`);
+    
+    // Always reset state and fetch fresh data when component mounts
+    setIsLoading(true);
+    setError(null);
+    setStatsData(null);
+    
+    // Immediate first fetch
     fetchStats();
     
     // Set up an interval to refresh data every 5 seconds to show real-time updates
     const refreshInterval = setInterval(() => {
-      console.log("Refreshing stats data...");
+      console.log(`Refreshing stats data... (mounted at ${mountTime})`);
       fetchStats();
     }, 5000);
     
     // Cleanup
-    return () => clearInterval(refreshInterval);
-  }, []);
+    return () => {
+      console.log(`Cleaning up Results screen mounted at ${mountTime}`);
+      clearInterval(refreshInterval);
+    };
+  }, [mountTime]);
 
   const fetchStats = async () => {
+    if (!isLoading && statsData === null) {
+      setIsLoading(true);
+    }
+    
     try {
-      console.log("Fetching stats from API...");
+      console.log(`Fetching stats from API... (mounted at ${mountTime})`);
       const result = await getFeedbackStats();
       console.log("Stats API result:", result);
       
