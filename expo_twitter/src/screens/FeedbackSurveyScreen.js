@@ -9,6 +9,7 @@ import {
   BackHandler,
   Button,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
@@ -29,6 +30,7 @@ const FeedbackSurveyScreen = () => {
   });
   const [resultsKey, setResultsKey] = useState(Date.now());
   const [navigationAttempts, setNavigationAttempts] = useState({});
+  const [timeoutId, setTimeoutId] = useState(null);
 
   // Handle back button press
   useFocusEffect(
@@ -45,6 +47,29 @@ const FeedbackSurveyScreen = () => {
       return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [currentScreen])
   );
+
+  // Safety mechanism to prevent getting stuck on loading screen
+  useEffect(() => {
+    if (isLoading) {
+      // Set a timeout to force exit loading state after 10 seconds
+      const id = setTimeout(() => {
+        console.log('🚨 Safety timeout triggered - forcing exit from loading state');
+        setIsLoading(false);
+        
+        // If we were trying to go to results screen, force it now
+        if (currentScreen === 2) {
+          console.log('⚠️ Forcing transition to results screen');
+          setCurrentScreen(3);
+        }
+      }, 10000);
+      
+      setTimeoutId(id);
+      
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    }
+  }, [isLoading, currentScreen]);
 
   // Log current screen for debugging
   useEffect(() => {
@@ -64,6 +89,9 @@ const FeedbackSurveyScreen = () => {
       const newKey = Date.now();
       setResultsKey(newKey);
       console.log(`🔁 Forced refresh of results screen with key: ${newKey}`);
+      
+      // Ensure we're not in loading state
+      setIsLoading(false);
     }
   }, [currentScreen]);
 
@@ -97,7 +125,7 @@ const FeedbackSurveyScreen = () => {
       setResultsKey(newKey);
       console.log(`📊 Preparing results screen with key: ${newKey}`);
       
-      // Use a timeout to ensure UI updates before transition
+      // Use a shorter timeout to ensure UI updates before transition
       setTimeout(() => {
         // First update state
         setCurrentScreen(3);
@@ -108,6 +136,14 @@ const FeedbackSurveyScreen = () => {
           console.log("✅ Completed transition to results screen");
         }, 300);
       }, 300);
+      
+      // Add safety timeout to prevent getting stuck in loading state
+      setTimeout(() => {
+        if (isLoading) {
+          console.log("⚠️ Safety timeout triggered - results transition taking too long");
+          setIsLoading(false);
+        }
+      }, 5000);
     } else {
       // Regular navigation
       if (direction === 'next') {
@@ -121,15 +157,28 @@ const FeedbackSurveyScreen = () => {
   // Special direct navigation function for emergency use
   const forceNavigateToResults = () => {
     console.log("🚨 Emergency direct navigation to results");
-    setIsLoading(true);
+    
+    // Clear any existing timeouts
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    // Generate a new key and force transition
     const newKey = Date.now();
     setResultsKey(newKey);
     
-    setTimeout(() => {
-      setCurrentScreen(3);
-      setTimeout(() => setIsLoading(false), 300);
-    }, 300);
+    // Just go directly to results without loading screen
+    setCurrentScreen(3);
+    setIsLoading(false);
   };
+
+  // Button component to force navigate to results if stuck
+  const EmergencyButton = () => (
+    <TouchableOpacity
+      style={styles.emergencyButton}
+      onPress={forceNavigateToResults}
+    >
+      <Text style={styles.emergencyButtonText}>Show Results</Text>
+    </TouchableOpacity>
+  );
 
   const renderCurrentScreen = () => {
     // Safeguard against invalid screen index
@@ -190,7 +239,15 @@ const FeedbackSurveyScreen = () => {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1DA1F2" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Loading results...</Text>
+        
+        {/* Emergency button to force results screen if loading takes too long */}
+        <TouchableOpacity
+          style={styles.emergencyButton}
+          onPress={forceNavigateToResults}
+        >
+          <Text style={styles.emergencyButtonText}>Show Results Now</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -240,7 +297,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#657786',
-  }
+    marginBottom: 30,
+  },
+  emergencyButton: {
+    marginTop: 20,
+    backgroundColor: '#F5F8FA',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1DA1F2',
+  },
+  emergencyButtonText: {
+    color: '#1DA1F2',
+    fontSize: 14,
+  },
 });
 
 export default FeedbackSurveyScreen; 

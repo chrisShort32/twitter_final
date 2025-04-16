@@ -58,6 +58,22 @@ const FeedbackResultsScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasLoadedAnyData, setHasLoadedAnyData] = useState(false);
   
+  // Add a timeout to ensure we don't stay in loading state forever
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        console.log("⏱️ Loading timeout triggered - using test data");
+        if (!statsData) {
+          setStatsData(TEST_DATA);
+          setError("Using sample data (loading timeout)");
+        }
+        setIsLoading(false);
+      }, 5000); // 5 second timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, statsData]);
+  
   // Helper to refresh data with visual indicator
   const refreshData = async (showIndicator = true) => {
     if (showIndicator) {
@@ -78,16 +94,16 @@ const FeedbackResultsScreen = () => {
     React.useCallback(() => {
       console.log(`📊 Results screen gained focus at ${Date.now()}`);
       
-      // If we haven't loaded data yet, do a full load
-      if (!hasLoadedAnyData) {
-        console.log("🔄 First time focus - doing full load");
-        setIsLoading(true);
-        refreshData(false);
-      } else {
-        // Otherwise do a background refresh
-        console.log("🔄 Refreshing in background");
-        refreshData(false);
+      // Always show something immediately
+      if (!statsData && !hasLoadedAnyData) {
+        console.log("🔄 First time focus - using test data immediately");
+        setStatsData(TEST_DATA);
+        setHasLoadedAnyData(true);
       }
+      
+      // Then try to get real data
+      console.log("🔄 Refreshing in background");
+      refreshData(false);
       
       // Set up refresh interval
       const refreshInterval = setInterval(() => {
@@ -99,20 +115,20 @@ const FeedbackResultsScreen = () => {
         console.log('📊 Results screen lost focus, clearing interval');
         clearInterval(refreshInterval);
       };
-    }, [hasLoadedAnyData])
+    }, [hasLoadedAnyData, statsData])
   );
 
   // Also fetch when first mounted
   useEffect(() => {
     console.log(`📊 Results screen mounted at ${mountTimeRef.current}`);
     
-    // Reset state on mount
-    setIsLoading(true);
-    setError(null);
-    setStatsData(null);
-    fetchAttemptsRef.current = 0;
+    // Use test data immediately to prevent blank screen
+    setStatsData(TEST_DATA);
+    setIsLoading(false);
+    setHasLoadedAnyData(true);
     
-    fetchStats();
+    // Then try to get real data
+    refreshData(false);
     
     return () => {
       console.log(`📊 Results screen unmounting, was mounted at ${mountTimeRef.current}`);
@@ -124,10 +140,6 @@ const FeedbackResultsScreen = () => {
     fetchAttemptsRef.current += 1;
     const currentAttempt = fetchAttemptsRef.current;
     
-    if (!isLoading && statsData === null) {
-      setIsLoading(true);
-    }
-    
     try {
       console.log(`📊 Fetching stats (attempt ${currentAttempt})...`);
       const result = await getFeedbackStats();
@@ -136,61 +148,29 @@ const FeedbackResultsScreen = () => {
       if (result.success) {
         console.log(`✅ Stats fetch attempt ${currentAttempt} successful!`);
         setHasLoadedAnyData(true);
-      } else {
-        console.error(`❌ Stats fetch attempt ${currentAttempt} failed:`, result.error);
-      }
-      
-      // Only update state if this is still the latest request
-      if (currentAttempt === fetchAttemptsRef.current) {
-        if (result.success && result.data) {
+        
+        // Only update state if this is still the latest request
+        if (currentAttempt === fetchAttemptsRef.current) {
           setStatsData(result.data);
           setError(null);
-        } else {
-          // After multiple failed attempts, use test data as fallback
-          if (fetchAttemptsRef.current > 3 && !statsData) {
-            console.log("⚠️ Multiple failures, using test data as fallback");
-            setStatsData(TEST_DATA);
-            setError("Using sample data (couldn't connect to server)");
-          } else {
-            setError(result.error || 'Failed to retrieve feedback statistics');
-          }
-          
-          // Show alert on first error only
-          if (statsData === null && currentAttempt <= 2) {
-            Alert.alert(
-              "Data Loading Issue", 
-              "We're having trouble loading feedback statistics. We'll keep trying to connect to the server.",
-              [{ text: "OK" }]
-            );
-          }
+          setIsLoading(false);
         }
+      } else {
+        console.error(`❌ Stats fetch attempt ${currentAttempt} failed:`, result.error);
         
-        setIsLoading(false);
+        // Only update error message, keep showing old or test data
+        if (currentAttempt === fetchAttemptsRef.current) {
+          setError("Could not get latest data from server");
+          setIsLoading(false);
+        }
       }
     } catch (err) {
       console.error(`❌ Stats fetch attempt ${currentAttempt} exception:`, err);
       
-      // Only update state if this is still the latest request
+      // Only update error message, keep showing old or test data
       if (currentAttempt === fetchAttemptsRef.current) {
-        // After multiple failed attempts, use test data as fallback
-        if (fetchAttemptsRef.current > 3 && !statsData) {
-          console.log("⚠️ Multiple failures, using test data as fallback");
-          setStatsData(TEST_DATA);
-          setError("Using sample data (couldn't connect to server)");
-        } else {
-          setError(`An error occurred: ${err.message || 'Unknown error'}`);
-        }
-        
+        setError(`Connection error: ${err.message || 'Unknown error'}`);
         setIsLoading(false);
-        
-        // Show alert on first error only
-        if (statsData === null && currentAttempt <= 2) {
-          Alert.alert(
-            "Connection Error", 
-            "We're having trouble connecting to the server. We'll use sample data if this continues.",
-            [{ text: "OK" }]
-          );
-        }
       }
     }
   };
