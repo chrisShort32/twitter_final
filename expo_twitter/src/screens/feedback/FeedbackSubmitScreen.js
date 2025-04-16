@@ -28,39 +28,46 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
     setAttempts(prev => prev + 1);
     
     try {
-      console.log('Submitting feedback:', {
-        likes_app: feedbackData.likesApp,
-        selected_reasons: feedbackData.selectedOptions
-      });
-      
+      // Format the data exactly as the backend expects it
       const feedback = {
         likes_app: feedbackData.likesApp,
         selected_reasons: feedbackData.selectedOptions
       };
       
+      console.log('🚀 Submitting feedback to backend:', JSON.stringify(feedback, null, 2));
+      
       const result = await submitFeedback(feedback);
       
-      console.log('Feedback submission result:', result);
+      console.log('📦 Feedback submission result:', JSON.stringify(result, null, 2));
       
       // If result exists and has success property true
       if (result && result.success) {
         console.log('✅ Feedback submitted successfully, moving to results screen');
         
-        // Brief delay to ensure things settle before transition
-        setTimeout(() => {
-          onSwipeNext();
-        }, 500);
+        // Force success to ensure transition works
+        Alert.alert(
+          "Feedback Submitted",
+          "Thank you for your feedback! Now loading the results.",
+          [{ text: "OK", onPress: () => {
+            // Navigate to results screen with a delay
+            setTimeout(() => {
+              console.log('🔄 Navigating to results screen...');
+              onSwipeNext();
+            }, 500);
+          }}]
+        );
       } else {
         console.error('❌ Feedback submission failed:', result ? result.error : 'Unknown error');
         
         // Show alert with error
         Alert.alert(
           "Submission Error", 
-          result?.error || "Failed to submit feedback",
+          `We couldn't submit your feedback. ${result?.error || "Please try again."}`,
           [{ text: "Try Again", onPress: () => setIsSubmitting(false) }]
         );
         
         setError(result?.error || 'Failed to submit feedback');
+        setIsSubmitting(false);
       }
     } catch (err) {
       console.error('❌ Unexpected error during feedback submission:', err);
@@ -73,9 +80,7 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
       );
       
       setError('An unexpected error occurred: ' + (err.message || err));
-    } finally {
-      // Keep submitting state true if successful to prevent double-submission
-      // It will be reset when component unmounts
+      setIsSubmitting(false);
     }
   };
 
@@ -141,11 +146,24 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
             <Text style={styles.submitButtonText}>Submit Feedback</Text>
           )}
         </TouchableOpacity>
+        
+        {/* Alternative direct navigation to results */}
+        {error && (
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => {
+              console.log('⏭️ Skipping directly to results screen');
+              onSwipeNext();
+            }}
+          >
+            <Text style={styles.skipButtonText}>Skip to Results</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -220,6 +238,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  skipButton: {
+    marginTop: 15,
+    padding: 10,
+  },
+  skipButtonText: {
+    color: '#657786',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   errorBox: {
     backgroundColor: '#FFF8F8',

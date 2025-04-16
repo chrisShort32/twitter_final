@@ -10,6 +10,7 @@ import {
   ScrollView,
   LogBox,
   Alert,
+  Image,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { VictoryPie, VictoryBar, VictoryChart, VictoryTheme, VictoryAxis } from 'victory-native';
@@ -23,6 +24,30 @@ LogBox.ignoreLogs([
 
 const { width } = Dimensions.get('window');
 
+// Test data in case the backend doesn't respond - used as a fallback
+const TEST_DATA = {
+  total_responses: 6,
+  likes: {
+    count: 5,
+    reasons: {
+      "User Interface": 3,
+      "Ease of Use": 4, 
+      "Social Interaction": 2,
+      "Search Functionality": 3,
+      "Content Quality": 2,
+      "Notifications": 1
+    }
+  },
+  dislikes: {
+    count: 1,
+    reasons: {
+      "Too Many Notifications": 1,
+      "Poor Search Results": 1,
+      "Limited Customization": 1
+    }
+  }
+};
+
 const FeedbackResultsScreen = () => {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +57,7 @@ const FeedbackResultsScreen = () => {
   const mountTimeRef = useRef(Date.now());
   const fetchAttemptsRef = useRef(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasLoadedAnyData, setHasLoadedAnyData] = useState(false);
   
   // Helper to refresh data with visual indicator
   const refreshData = async (showIndicator = true) => {
@@ -51,25 +77,35 @@ const FeedbackResultsScreen = () => {
   // Fetch stats when screen gets focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log(`Results screen gained focus at ${Date.now()}`);
-      refreshData(false);
+      console.log(`📊 Results screen gained focus at ${Date.now()}`);
+      
+      // If we haven't loaded data yet, do a full load
+      if (!hasLoadedAnyData) {
+        console.log("🔄 First time focus - doing full load");
+        setIsLoading(true);
+        refreshData(false);
+      } else {
+        // Otherwise do a background refresh
+        console.log("🔄 Refreshing in background");
+        refreshData(false);
+      }
       
       // Set up refresh interval
       const refreshInterval = setInterval(() => {
-        console.log(`Auto-refreshing stats data (attempt ${fetchAttemptsRef.current + 1})`);
+        console.log(`🔄 Auto-refreshing stats data (attempt ${fetchAttemptsRef.current + 1})`);
         refreshData(false);
-      }, 5000);
+      }, 8000); // Longer interval to reduce network requests
       
       return () => {
-        console.log('Results screen lost focus, clearing interval');
+        console.log('📊 Results screen lost focus, clearing interval');
         clearInterval(refreshInterval);
       };
-    }, [])
+    }, [hasLoadedAnyData])
   );
 
   // Also fetch when first mounted
   useEffect(() => {
-    console.log(`Results screen mounted at ${mountTimeRef.current}`);
+    console.log(`📊 Results screen mounted at ${mountTimeRef.current}`);
     
     // Reset state on mount
     setIsLoading(true);
@@ -80,7 +116,7 @@ const FeedbackResultsScreen = () => {
     fetchStats();
     
     return () => {
-      console.log(`Results screen unmounting, was mounted at ${mountTimeRef.current}`);
+      console.log(`📊 Results screen unmounting, was mounted at ${mountTimeRef.current}`);
     };
   }, []);
 
@@ -94,14 +130,15 @@ const FeedbackResultsScreen = () => {
     }
     
     try {
-      console.log(`Fetching stats (attempt ${currentAttempt})...`);
+      console.log(`📊 Fetching stats (attempt ${currentAttempt})...`);
       const result = await getFeedbackStats();
       
       // Log abbreviated response to avoid console spam
       if (result.success) {
-        console.log(`Stats fetch attempt ${currentAttempt} successful!`);
+        console.log(`✅ Stats fetch attempt ${currentAttempt} successful!`);
+        setHasLoadedAnyData(true);
       } else {
-        console.error(`Stats fetch attempt ${currentAttempt} failed:`, result.error);
+        console.error(`❌ Stats fetch attempt ${currentAttempt} failed:`, result.error);
       }
       
       // Only update state if this is still the latest request
@@ -110,13 +147,20 @@ const FeedbackResultsScreen = () => {
           setStatsData(result.data);
           setError(null);
         } else {
-          setError(result.error || 'Failed to retrieve feedback statistics');
+          // After multiple failed attempts, use test data as fallback
+          if (fetchAttemptsRef.current > 3 && !statsData) {
+            console.log("⚠️ Multiple failures, using test data as fallback");
+            setStatsData(TEST_DATA);
+            setError("Using sample data (couldn't connect to server)");
+          } else {
+            setError(result.error || 'Failed to retrieve feedback statistics');
+          }
           
           // Show alert on first error only
           if (statsData === null && currentAttempt <= 2) {
             Alert.alert(
-              "Data Loading Error", 
-              "There was a problem loading feedback statistics. We'll keep trying.",
+              "Data Loading Issue", 
+              "We're having trouble loading feedback statistics. We'll keep trying to connect to the server.",
               [{ text: "OK" }]
             );
           }
@@ -125,18 +169,26 @@ const FeedbackResultsScreen = () => {
         setIsLoading(false);
       }
     } catch (err) {
-      console.error(`Stats fetch attempt ${currentAttempt} exception:`, err);
+      console.error(`❌ Stats fetch attempt ${currentAttempt} exception:`, err);
       
       // Only update state if this is still the latest request
       if (currentAttempt === fetchAttemptsRef.current) {
-        setError(`An error occurred: ${err.message || 'Unknown error'}`);
+        // After multiple failed attempts, use test data as fallback
+        if (fetchAttemptsRef.current > 3 && !statsData) {
+          console.log("⚠️ Multiple failures, using test data as fallback");
+          setStatsData(TEST_DATA);
+          setError("Using sample data (couldn't connect to server)");
+        } else {
+          setError(`An error occurred: ${err.message || 'Unknown error'}`);
+        }
+        
         setIsLoading(false);
         
         // Show alert on first error only
         if (statsData === null && currentAttempt <= 2) {
           Alert.alert(
             "Connection Error", 
-            "There was a problem connecting to the server. We'll keep trying.",
+            "We're having trouble connecting to the server. We'll use sample data if this continues.",
             [{ text: "OK" }]
           );
         }
@@ -154,6 +206,11 @@ const FeedbackResultsScreen = () => {
         <View style={styles.loadingView}>
           <ActivityIndicator size="large" color="#1DA1F2" />
           <Text style={styles.loadingText}>Loading statistics...</Text>
+          <Image 
+            source={require('../../../assets/chart-loading.gif')} 
+            style={styles.loadingImage}
+            resizeMode="contain"
+          />
         </View>
       );
     }
@@ -190,9 +247,13 @@ const FeedbackResultsScreen = () => {
       );
     }
     
+    // Ensure likes and dislikes counts exist, default to 0 if not
+    const likesCount = likes?.count || 0;
+    const dislikesCount = dislikes?.count || 0;
+    
     const pieChartData = [
-      { x: 'Like', y: likes.count, color: '#1DA1F2' },
-      { x: 'Dislike', y: dislikes.count, color: '#E0245E' },
+      { x: 'Like', y: likesCount, color: '#1DA1F2' },
+      { x: 'Dislike', y: dislikesCount, color: '#E0245E' },
     ];
     
     return (
@@ -204,6 +265,10 @@ const FeedbackResultsScreen = () => {
           <View style={styles.refreshIndicator}>
             <ActivityIndicator size="small" color="#1DA1F2" />
           </View>
+        )}
+        
+        {error && (
+          <Text style={styles.dataWarning}>{error}</Text>
         )}
         
         <VictoryPie
@@ -225,12 +290,20 @@ const FeedbackResultsScreen = () => {
         <View style={styles.legendContainer}>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#1DA1F2' }]} />
-            <Text style={styles.legendText}>Like ({likes.count})</Text>
+            <Text style={styles.legendText}>Like ({likesCount})</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#E0245E' }]} />
-            <Text style={styles.legendText}>Dislike ({dislikes.count})</Text>
+            <Text style={styles.legendText}>Dislike ({dislikesCount})</Text>
           </View>
+        </View>
+        
+        <View style={styles.percentageView}>
+          <Text style={styles.percentageText}>
+            {likesCount + dislikesCount > 0 
+              ? `${Math.round((likesCount / (likesCount + dislikesCount)) * 100)}% of users like the app`
+              : "No feedback yet"}
+          </Text>
         </View>
         
         <TouchableOpacity
@@ -258,7 +331,7 @@ const FeedbackResultsScreen = () => {
     
     if (!statsData) return null;
     
-    const data = type === 'likes' ? statsData.likes.reasons : statsData.dislikes.reasons;
+    const data = type === 'likes' ? statsData.likes?.reasons : statsData.dislikes?.reasons;
     
     if (!data || Object.keys(data).length === 0) {
       return (
@@ -290,6 +363,10 @@ const FeedbackResultsScreen = () => {
           <View style={styles.refreshIndicator}>
             <ActivityIndicator size="small" color="#1DA1F2" />
           </View>
+        )}
+        
+        {error && (
+          <Text style={styles.dataWarning}>{error}</Text>
         )}
         
         <VictoryChart
@@ -476,6 +553,11 @@ const styles = StyleSheet.create({
     height: 300,
     width: '100%',
   },
+  loadingImage: {
+    width: 200,
+    height: 120,
+    marginTop: 20,
+  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -488,6 +570,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     fontSize: 16,
+  },
+  dataWarning: {
+    color: '#E0245E',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 5,
+    fontStyle: 'italic',
   },
   retryButton: {
     backgroundColor: '#1DA1F2',
@@ -603,6 +692,19 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 14,
     color: '#657786',
+  },
+  percentageView: {
+    marginTop: 10,
+    backgroundColor: '#F8F9FA',
+    padding: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+  },
+  percentageText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#14171A',
   },
   emptyContainer: {
     alignItems: 'center',

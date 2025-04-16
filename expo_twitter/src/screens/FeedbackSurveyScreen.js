@@ -28,6 +28,7 @@ const FeedbackSurveyScreen = () => {
     selectedOptions: [],
   });
   const [resultsKey, setResultsKey] = useState(Date.now());
+  const [navigationAttempts, setNavigationAttempts] = useState({});
 
   // Handle back button press
   useFocusEffect(
@@ -47,11 +48,35 @@ const FeedbackSurveyScreen = () => {
 
   // Log current screen for debugging
   useEffect(() => {
-    console.log(`Current screen index: ${currentScreen}`);
+    console.log(`📱 Current screen index: ${currentScreen}`);
+    
+    // When switching to results screen, update the key to force a re-render
+    if (currentScreen === 3) {
+      console.log('🔄 Results screen rendered, key:', resultsKey);
+    }
+  }, [currentScreen, resultsKey]);
+
+  // Critical transition effect - ensure results screen loads properly
+  useEffect(() => {
+    // Special case for results screen - if it's active, ensure data is refreshed
+    if (currentScreen === 3) {
+      // Generate a new key to force remount
+      const newKey = Date.now();
+      setResultsKey(newKey);
+      console.log(`🔁 Forced refresh of results screen with key: ${newKey}`);
+    }
   }, [currentScreen]);
 
   const handleNavigation = (data, direction) => {
-    console.log(`Navigation from screen ${currentScreen} to ${direction === 'next' ? 'next' : 'previous'}`);
+    // Track navigation attempts for debugging
+    const fromScreen = currentScreen;
+    const toScreen = direction === 'next' ? currentScreen + 1 : currentScreen - 1;
+    
+    console.log(`🔀 Navigation attempt from screen ${fromScreen} to ${toScreen}`);
+    setNavigationAttempts(prev => ({
+      ...prev,
+      [`${fromScreen}->${toScreen}`]: (prev[`${fromScreen}->${toScreen}`] || 0) + 1
+    }));
     
     // Handle data from current screen
     if (currentScreen === 0 && direction === 'next') {
@@ -62,16 +87,26 @@ const FeedbackSurveyScreen = () => {
       setFeedbackData({ ...feedbackData, selectedOptions: data });
     }
 
-    // If going to results screen, update the key to force refresh
+    // If going to results screen, use special handling
     if (currentScreen === 2 && direction === 'next') {
-      console.log("Transitioning to results screen - updating results key");
+      console.log("🚨 Critical transition to results screen");
       setIsLoading(true);
       
-      // Brief delay to ensure screen transition feels smooth
+      // Generate new key for results screen
+      const newKey = Date.now();
+      setResultsKey(newKey);
+      console.log(`📊 Preparing results screen with key: ${newKey}`);
+      
+      // Use a timeout to ensure UI updates before transition
       setTimeout(() => {
-        setResultsKey(Date.now());
+        // First update state
         setCurrentScreen(3);
-        setIsLoading(false);
+        
+        // Then after a brief delay, finish loading
+        setTimeout(() => {
+          setIsLoading(false);
+          console.log("✅ Completed transition to results screen");
+        }, 300);
       }, 300);
     } else {
       // Regular navigation
@@ -82,8 +117,41 @@ const FeedbackSurveyScreen = () => {
       }
     }
   };
+  
+  // Special direct navigation function for emergency use
+  const forceNavigateToResults = () => {
+    console.log("🚨 Emergency direct navigation to results");
+    setIsLoading(true);
+    const newKey = Date.now();
+    setResultsKey(newKey);
+    
+    setTimeout(() => {
+      setCurrentScreen(3);
+      setTimeout(() => setIsLoading(false), 300);
+    }, 300);
+  };
 
   const renderCurrentScreen = () => {
+    // Safeguard against invalid screen index
+    if (currentScreen < 0 || currentScreen > 3) {
+      console.error(`❌ Invalid screen index: ${currentScreen}`);
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            An error occurred with the feedback flow. Invalid screen index.
+          </Text>
+          <Button
+            title="Go to Results" 
+            onPress={forceNavigateToResults}
+          />
+          <Button 
+            title="Return Home" 
+            onPress={() => navigation.navigate('Home')}
+          />
+        </View>
+      );
+    }
+    
     switch (currentScreen) {
       case 0:
         return (
@@ -106,29 +174,15 @@ const FeedbackSurveyScreen = () => {
           />
         );
       case 3:
+        // Ensure results screen always gets a fresh key for remounting
         return (
           <View style={styles.fullScreenContainer}>
             <FeedbackResultsScreen key={resultsKey} />
           </View>
         );
       default:
-        // Fallback for unexpected screen index
-        Alert.alert(
-          "Error", 
-          "An unexpected error occurred in the feedback flow. Please try again.",
-          [{ text: "OK", onPress: () => navigation.navigate('Home') }]
-        );
-        return (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>
-              An unexpected error occurred. Please try again.
-            </Text>
-            <Button 
-              title="Return to Home" 
-              onPress={() => navigation.navigate('Home')} 
-            />
-          </View>
-        );
+        // This should never happen due to the safeguard above
+        return null;
     }
   };
 
@@ -168,6 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    gap: 15,
   },
   errorText: {
     textAlign: 'center',
