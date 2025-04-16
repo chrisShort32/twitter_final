@@ -394,8 +394,8 @@ export const submitFeedback = async (feedbackData) => {
       headers.Authorization = `Bearer ${token}`;
     }
     
-    // Log the full API URL for debugging
-    const apiUrl = `${API_BASE_URL}/feedback/submit/`;
+    // Use the correct endpoint path for the Django backend
+    const apiUrl = `${API_BASE_URL}/feedback/`;
     console.log(`Submitting feedback to: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
@@ -440,7 +440,7 @@ export const submitFeedback = async (feedbackData) => {
  */
 export const getFeedbackStats = async () => {
   try {
-    // Log the full API URL for debugging
+    // Use the correct endpoint path for the Django backend
     const apiUrl = `${API_BASE_URL}/feedback/stats/`;
     console.log(`Fetching feedback statistics from: ${apiUrl}`);
     
