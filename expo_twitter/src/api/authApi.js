@@ -382,7 +382,10 @@ export const submitFeedback = async (feedbackData) => {
   try {
     console.log("Submitting feedback:", feedbackData);
     
-    const token = await getToken();
+    // Use getCurrentUser instead of getToken since getToken might not be defined
+    const currentUser = await getCurrentUser();
+    const token = currentUser?.token;
+    
     const headers = {
       "Content-Type": "application/json",
     };
