@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { submitFeedback } from '../../api/authApi';
@@ -17,10 +18,14 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
   const navigation = useNavigation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [attempts, setAttempts] = useState(0);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return; // Prevent double-submission
+    
     setIsSubmitting(true);
     setError(null);
+    setAttempts(prev => prev + 1);
     
     try {
       console.log('Submitting feedback:', {
@@ -37,22 +42,68 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
       
       console.log('Feedback submission result:', result);
       
-      // If result exists and doesn't have an error property
-      if (result) {
-        console.log('Feedback submitted successfully, navigating to results');
-        // Move to the results screen
-        onSwipeNext();
+      // If result exists and has success property true
+      if (result && result.success) {
+        console.log('✅ Feedback submitted successfully, moving to results screen');
+        
+        // Brief delay to ensure things settle before transition
+        setTimeout(() => {
+          onSwipeNext();
+        }, 500);
       } else {
-        console.error('Feedback submission failed:', result ? result.error : 'Unknown error');
+        console.error('❌ Feedback submission failed:', result ? result.error : 'Unknown error');
+        
+        // Show alert with error
+        Alert.alert(
+          "Submission Error", 
+          result?.error || "Failed to submit feedback",
+          [{ text: "Try Again", onPress: () => setIsSubmitting(false) }]
+        );
+        
         setError(result?.error || 'Failed to submit feedback');
       }
     } catch (err) {
-      console.error('Unexpected error during feedback submission:', err);
+      console.error('❌ Unexpected error during feedback submission:', err);
+      
+      // Show alert with error
+      Alert.alert(
+        "Error", 
+        `An unexpected error occurred: ${err.message || err}`,
+        [{ text: "Try Again", onPress: () => setIsSubmitting(false) }]
+      );
+      
       setError('An unexpected error occurred: ' + (err.message || err));
     } finally {
-      setIsSubmitting(false);
+      // Keep submitting state true if successful to prevent double-submission
+      // It will be reset when component unmounts
     }
   };
+
+  // Handle case of too many failed submission attempts
+  if (attempts > 3 && error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Submission Error</Text>
+          
+          <View style={styles.errorBox}>
+            <Text style={styles.errorTitle}>
+              We're having trouble submitting your feedback
+            </Text>
+            
+            <Text style={styles.errorText}>{error}</Text>
+            
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Text style={styles.homeButtonText}>Return to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,7 +133,10 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
         )}
         
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            isSubmitting && styles.submitButtonDisabled
+          ]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
@@ -159,9 +213,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '80%',
   },
+  submitButtonDisabled: {
+    backgroundColor: '#AAB8C2',
+  },
   submitButtonText: {
     color: 'white',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  errorBox: {
+    backgroundColor: '#FFF8F8',
+    borderWidth: 1,
+    borderColor: '#E0245E',
+    borderRadius: 15,
+    padding: 20,
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E0245E',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  homeButton: {
+    backgroundColor: '#1DA1F2',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 30,
+    marginTop: 20,
+  },
+  homeButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

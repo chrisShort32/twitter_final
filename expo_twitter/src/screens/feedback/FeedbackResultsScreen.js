@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,13 +9,17 @@ import {
   ActivityIndicator,
   ScrollView,
   LogBox,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { VictoryPie, VictoryBar, VictoryChart, VictoryTheme, VictoryAxis } from 'victory-native';
 import { getFeedbackStats } from '../../api/authApi';
 
 // Ignore warnings that might be related to VictoryChart rendering
-LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+LogBox.ignoreLogs([
+  'VirtualizedLists should never be nested',
+  'Animated: `useNativeDriver`'
+]);
 
 const { width } = Dimensions.get('window');
 
@@ -24,57 +28,119 @@ const FeedbackResultsScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statsData, setStatsData] = useState(null);
-  const [activeView, setActiveView] = useState('overview'); // 'overview', 'likes', 'dislikes'
-  const [mountTime] = useState(Date.now()); // Used to track component mount time
-
-  // Fetch stats when component mounts AND set up refresh interval
-  useEffect(() => {
-    console.log(`Results screen is mounting at ${mountTime}`);
+  const [activeView, setActiveView] = useState('overview'); 
+  const mountTimeRef = useRef(Date.now());
+  const fetchAttemptsRef = useRef(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Helper to refresh data with visual indicator
+  const refreshData = async (showIndicator = true) => {
+    if (showIndicator) {
+      setIsRefreshing(true);
+    }
     
-    // Always reset state and fetch fresh data when component mounts
+    try {
+      await fetchStats();
+    } finally {
+      if (showIndicator) {
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
+    }
+  };
+
+  // Fetch stats when screen gets focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log(`Results screen gained focus at ${Date.now()}`);
+      refreshData(false);
+      
+      // Set up refresh interval
+      const refreshInterval = setInterval(() => {
+        console.log(`Auto-refreshing stats data (attempt ${fetchAttemptsRef.current + 1})`);
+        refreshData(false);
+      }, 5000);
+      
+      return () => {
+        console.log('Results screen lost focus, clearing interval');
+        clearInterval(refreshInterval);
+      };
+    }, [])
+  );
+
+  // Also fetch when first mounted
+  useEffect(() => {
+    console.log(`Results screen mounted at ${mountTimeRef.current}`);
+    
+    // Reset state on mount
     setIsLoading(true);
     setError(null);
     setStatsData(null);
+    fetchAttemptsRef.current = 0;
     
-    // Immediate first fetch
     fetchStats();
     
-    // Set up an interval to refresh data every 5 seconds to show real-time updates
-    const refreshInterval = setInterval(() => {
-      console.log(`Refreshing stats data... (mounted at ${mountTime})`);
-      fetchStats();
-    }, 5000);
-    
-    // Cleanup
     return () => {
-      console.log(`Cleaning up Results screen mounted at ${mountTime}`);
-      clearInterval(refreshInterval);
+      console.log(`Results screen unmounting, was mounted at ${mountTimeRef.current}`);
     };
-  }, [mountTime]);
+  }, []);
 
   const fetchStats = async () => {
+    // Track fetch attempts
+    fetchAttemptsRef.current += 1;
+    const currentAttempt = fetchAttemptsRef.current;
+    
     if (!isLoading && statsData === null) {
       setIsLoading(true);
     }
     
     try {
-      console.log(`Fetching stats from API... (mounted at ${mountTime})`);
+      console.log(`Fetching stats (attempt ${currentAttempt})...`);
       const result = await getFeedbackStats();
-      console.log("Stats API result:", result);
       
-      if (result.success && result.data) {
-        console.log("Successfully received stats data:", result.data);
-        setStatsData(result.data);
-        setError(null);
+      // Log abbreviated response to avoid console spam
+      if (result.success) {
+        console.log(`Stats fetch attempt ${currentAttempt} successful!`);
       } else {
-        console.error("Error fetching stats:", result.error || "Unknown error");
-        setError(result.error || 'Failed to retrieve feedback statistics');
+        console.error(`Stats fetch attempt ${currentAttempt} failed:`, result.error);
+      }
+      
+      // Only update state if this is still the latest request
+      if (currentAttempt === fetchAttemptsRef.current) {
+        if (result.success && result.data) {
+          setStatsData(result.data);
+          setError(null);
+        } else {
+          setError(result.error || 'Failed to retrieve feedback statistics');
+          
+          // Show alert on first error only
+          if (statsData === null && currentAttempt <= 2) {
+            Alert.alert(
+              "Data Loading Error", 
+              "There was a problem loading feedback statistics. We'll keep trying.",
+              [{ text: "OK" }]
+            );
+          }
+        }
+        
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error("Exception in fetchStats:", err);
-      setError('An unexpected error occurred: ' + (err.message || err));
-    } finally {
-      setIsLoading(false);
+      console.error(`Stats fetch attempt ${currentAttempt} exception:`, err);
+      
+      // Only update state if this is still the latest request
+      if (currentAttempt === fetchAttemptsRef.current) {
+        setError(`An error occurred: ${err.message || 'Unknown error'}`);
+        setIsLoading(false);
+        
+        // Show alert on first error only
+        if (statsData === null && currentAttempt <= 2) {
+          Alert.alert(
+            "Connection Error", 
+            "There was a problem connecting to the server. We'll keep trying.",
+            [{ text: "OK" }]
+          );
+        }
+      }
     }
   };
 
@@ -83,14 +149,22 @@ const FeedbackResultsScreen = () => {
   };
 
   const renderOverview = () => {
+    if (isLoading && !statsData) {
+      return (
+        <View style={styles.loadingView}>
+          <ActivityIndicator size="large" color="#1DA1F2" />
+          <Text style={styles.loadingText}>Loading statistics...</Text>
+        </View>
+      );
+    }
+    
     if (!statsData) {
-      console.log("No stats data available");
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No feedback data available yet</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={fetchStats}
+            onPress={() => refreshData()}
           >
             <Text style={styles.retryButtonText}>Refresh Data</Text>
           </TouchableOpacity>
@@ -108,7 +182,7 @@ const FeedbackResultsScreen = () => {
           <Text style={styles.subtleText}>Your feedback was the first one!</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={fetchStats}
+            onPress={() => refreshData()}
           >
             <Text style={styles.retryButtonText}>Refresh Data</Text>
           </TouchableOpacity>
@@ -126,13 +200,26 @@ const FeedbackResultsScreen = () => {
         <Text style={styles.chartTitle}>Overall Feedback</Text>
         <Text style={styles.chartSubtitle}>Total Responses: {total_responses}</Text>
         
+        {isRefreshing && (
+          <View style={styles.refreshIndicator}>
+            <ActivityIndicator size="small" color="#1DA1F2" />
+          </View>
+        )}
+        
         <VictoryPie
           data={pieChartData}
           width={300}
           height={300}
           colorScale={pieChartData.map(item => item.color)}
-          style={{ labels: { fontSize: 14, fill: '#657786' } }}
+          style={{ 
+            labels: { fontSize: 14, fill: '#657786' },
+            parent: { marginTop: 20 }
+          }}
           labelRadius={({ innerRadius }) => innerRadius + 65}
+          animate={{
+            duration: 500,
+            easing: "bounce"
+          }}
         />
         
         <View style={styles.legendContainer}>
@@ -145,11 +232,30 @@ const FeedbackResultsScreen = () => {
             <Text style={styles.legendText}>Dislike ({dislikes.count})</Text>
           </View>
         </View>
+        
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => refreshData()}
+          disabled={isRefreshing}
+        >
+          <Text style={styles.refreshButtonText}>
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   };
 
   const renderReasonChart = (type) => {
+    if (isLoading && !statsData) {
+      return (
+        <View style={styles.loadingView}>
+          <ActivityIndicator size="large" color="#1DA1F2" />
+          <Text style={styles.loadingText}>Loading statistics...</Text>
+        </View>
+      );
+    }
+    
     if (!statsData) return null;
     
     const data = type === 'likes' ? statsData.likes.reasons : statsData.dislikes.reasons;
@@ -160,7 +266,7 @@ const FeedbackResultsScreen = () => {
           <Text style={styles.emptyText}>No data available</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={fetchStats}
+            onPress={() => refreshData()}
           >
             <Text style={styles.retryButtonText}>Refresh Data</Text>
           </TouchableOpacity>
@@ -180,11 +286,21 @@ const FeedbackResultsScreen = () => {
           {type === 'likes' ? 'Top Reasons Users Like the App' : 'Top Areas for Improvement'}
         </Text>
         
+        {isRefreshing && (
+          <View style={styles.refreshIndicator}>
+            <ActivityIndicator size="small" color="#1DA1F2" />
+          </View>
+        )}
+        
         <VictoryChart
           width={width - 40}
           height={300}
           domainPadding={{ x: 30 }}
           theme={VictoryTheme.material}
+          animate={{
+            duration: 500,
+            onLoad: { duration: 300 }
+          }}
         >
           <VictoryAxis
             tickFormat={(label) => ''}
@@ -229,24 +345,32 @@ const FeedbackResultsScreen = () => {
             </View>
           ))}
         </View>
+        
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => refreshData()}
+          disabled={isRefreshing}
+        >
+          <Text style={styles.refreshButtonText}>
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {isLoading && !statsData ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#1DA1F2" />
-            <Text style={styles.loadingText}>Loading feedback statistics...</Text>
-          </View>
-        ) : error ? (
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        scrollEventThrottle={16}
+      >
+        {error && !statsData ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity
               style={styles.retryButton}
-              onPress={fetchStats}
+              onPress={() => refreshData()}
             >
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
@@ -346,6 +470,12 @@ const styles = StyleSheet.create({
     color: '#657786',
     fontSize: 16,
   },
+  loadingView: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 300,
+    width: '100%',
+  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -370,6 +500,26 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  refreshButton: {
+    backgroundColor: '#F5F8FA',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#1DA1F2',
+  },
+  refreshButtonText: {
+    color: '#1DA1F2',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  refreshIndicator: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
   },
   content: {
     flex: 1,
@@ -419,6 +569,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     width: '100%',
+    position: 'relative',
   },
   chartTitle: {
     fontSize: 18,
