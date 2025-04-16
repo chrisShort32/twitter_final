@@ -36,52 +36,44 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
       
       console.log('🚀 Submitting feedback to backend:', JSON.stringify(feedback, null, 2));
       
-      const result = await submitFeedback(feedback);
-      
-      console.log('📦 Feedback submission result:', JSON.stringify(result, null, 2));
-      
-      // If result exists and has success property true
-      if (result && result.success) {
-        console.log('✅ Feedback submitted successfully, moving to results screen');
-        
-        // Force success to ensure transition works
-        Alert.alert(
-          "Feedback Submitted",
-          "Thank you for your feedback! Now loading the results.",
-          [{ text: "OK", onPress: () => {
-            // Navigate to results screen with a delay
-            setTimeout(() => {
-              console.log('🔄 Navigating to results screen...');
-              onSwipeNext();
-            }, 500);
-          }}]
-        );
-      } else {
-        console.error('❌ Feedback submission failed:', result ? result.error : 'Unknown error');
-        
-        // Show alert with error
-        Alert.alert(
-          "Submission Error", 
-          `We couldn't submit your feedback. ${result?.error || "Please try again."}`,
-          [{ text: "Try Again", onPress: () => setIsSubmitting(false) }]
-        );
-        
-        setError(result?.error || 'Failed to submit feedback');
+      // Set a timeout to move to next screen regardless of API response
+      const timeoutId = setTimeout(() => {
+        console.log('⏱️ Submission timeout - moving to results anyway');
         setIsSubmitting(false);
+        onSwipeNext();
+      }, 3000);
+      
+      try {
+        const result = await submitFeedback(feedback);
+        clearTimeout(timeoutId);
+        
+        console.log('📦 Feedback submission result:', JSON.stringify(result, null, 2));
+        
+        // If result exists and has success property true
+        if (result && result.success) {
+          console.log('✅ Feedback submitted successfully, moving to results screen');
+          // Move directly to results without showing alert
+          onSwipeNext();
+        } else {
+          console.error('❌ Feedback submission failed:', result ? result.error : 'Unknown error');
+          // Just move to results anyway
+          onSwipeNext();
+        }
+      } catch (fetchError) {
+        console.error('❌ Network error during feedback submission:', fetchError);
+        // Just move to results anyway - the timeout will handle this
       }
     } catch (err) {
       console.error('❌ Unexpected error during feedback submission:', err);
-      
-      // Show alert with error
-      Alert.alert(
-        "Error", 
-        `An unexpected error occurred: ${err.message || err}`,
-        [{ text: "Try Again", onPress: () => setIsSubmitting(false) }]
-      );
-      
-      setError('An unexpected error occurred: ' + (err.message || err));
+      // Move to results anyway
       setIsSubmitting(false);
+      onSwipeNext();
     }
+  };
+
+  const skipToResults = () => {
+    console.log('⏭️ Skipping directly to results screen');
+    onSwipeNext();
   };
 
   // Handle case of too many failed submission attempts
@@ -152,18 +144,12 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
           )}
         </TouchableOpacity>
         
-        {/* Alternative direct navigation to results */}
-        {error && (
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={() => {
-              console.log('⏭️ Skipping directly to results screen');
-              onSwipeNext();
-            }}
-          >
-            <Text style={styles.skipButtonText}>Skip to Results</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.skipButton}
+          onPress={skipToResults}
+        >
+          <Text style={styles.skipButtonText}>Skip to Results</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -230,6 +216,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '80%',
+    marginBottom: 15,
   },
   submitButtonDisabled: {
     backgroundColor: '#AAB8C2',
@@ -240,13 +227,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   skipButton: {
-    marginTop: 15,
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1DA1F2',
+    backgroundColor: '#F5F8FA',
   },
   skipButtonText: {
-    color: '#657786',
+    color: '#1DA1F2',
     fontSize: 14,
-    textDecorationLine: 'underline',
+    fontWeight: 'bold',
   },
   errorBox: {
     backgroundColor: '#FFF8F8',

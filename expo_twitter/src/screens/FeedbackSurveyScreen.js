@@ -51,7 +51,7 @@ const FeedbackSurveyScreen = () => {
   // Safety mechanism to prevent getting stuck on loading screen
   useEffect(() => {
     if (isLoading) {
-      // Set a timeout to force exit loading state after 10 seconds
+      // Set a timeout to force exit loading state after 5 seconds (reduced from 10)
       const id = setTimeout(() => {
         console.log('🚨 Safety timeout triggered - forcing exit from loading state');
         setIsLoading(false);
@@ -59,9 +59,9 @@ const FeedbackSurveyScreen = () => {
         // If we were trying to go to results screen, force it now
         if (currentScreen === 2) {
           console.log('⚠️ Forcing transition to results screen');
-          setCurrentScreen(3);
+          forceNavigateToResults();
         }
-      }, 10000);
+      }, 5000); // Reduced from 10000
       
       setTimeoutId(id);
       
@@ -115,35 +115,11 @@ const FeedbackSurveyScreen = () => {
       setFeedbackData({ ...feedbackData, selectedOptions: data });
     }
 
-    // If going to results screen, use special handling
+    // If going to results screen, use simplified handling
     if (currentScreen === 2 && direction === 'next') {
       console.log("🚨 Critical transition to results screen");
-      setIsLoading(true);
-      
-      // Generate new key for results screen
-      const newKey = Date.now();
-      setResultsKey(newKey);
-      console.log(`📊 Preparing results screen with key: ${newKey}`);
-      
-      // Use a shorter timeout to ensure UI updates before transition
-      setTimeout(() => {
-        // First update state
-        setCurrentScreen(3);
-        
-        // Then after a brief delay, finish loading
-        setTimeout(() => {
-          setIsLoading(false);
-          console.log("✅ Completed transition to results screen");
-        }, 300);
-      }, 300);
-      
-      // Add safety timeout to prevent getting stuck in loading state
-      setTimeout(() => {
-        if (isLoading) {
-          console.log("⚠️ Safety timeout triggered - results transition taking too long");
-          setIsLoading(false);
-        }
-      }, 5000);
+      // Go directly to results screen
+      forceNavigateToResults();
     } else {
       // Regular navigation
       if (direction === 'next') {
@@ -217,10 +193,18 @@ const FeedbackSurveyScreen = () => {
         );
       case 2:
         return (
-          <FeedbackSubmitScreen 
-            feedbackData={feedbackData}
-            onSwipeNext={() => handleNavigation(null, 'next')}
-          />
+          <View style={{flex: 1}}>
+            <FeedbackSubmitScreen 
+              feedbackData={feedbackData}
+              onSwipeNext={() => handleNavigation(null, 'next')}
+            />
+            <TouchableOpacity
+              style={styles.skipToResultsButton}
+              onPress={forceNavigateToResults}
+            >
+              <Text style={styles.skipToResultsText}>Skip to Results</Text>
+            </TouchableOpacity>
+          </View>
         );
       case 3:
         // Ensure results screen always gets a fresh key for remounting
@@ -311,6 +295,22 @@ const styles = StyleSheet.create({
   emergencyButtonText: {
     color: '#1DA1F2',
     fontSize: 14,
+  },
+  skipToResultsButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    backgroundColor: '#F5F8FA',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1DA1F2',
+  },
+  skipToResultsText: {
+    color: '#1DA1F2',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
