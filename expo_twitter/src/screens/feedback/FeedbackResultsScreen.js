@@ -22,25 +22,38 @@ const FeedbackResultsScreen = () => {
   const [statsData, setStatsData] = useState(null);
   const [activeView, setActiveView] = useState('overview'); // 'overview', 'likes', 'dislikes'
 
+  // Fetch stats when component mounts AND set up refresh interval
   useEffect(() => {
+    console.log("Results screen is mounting");
     fetchStats();
+    
+    // Set up an interval to refresh data every 5 seconds to show real-time updates
+    const refreshInterval = setInterval(() => {
+      console.log("Refreshing stats data...");
+      fetchStats();
+    }, 5000);
+    
+    // Cleanup
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
+      console.log("Fetching stats from API...");
       const result = await getFeedbackStats();
+      console.log("Stats API result:", result);
       
-      if (result.success) {
+      if (result.success && result.data) {
+        console.log("Successfully received stats data:", result.data);
         setStatsData(result.data);
+        setError(null);
       } else {
+        console.error("Error fetching stats:", result.error || "Unknown error");
         setError(result.error || 'Failed to retrieve feedback statistics');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
-      console.error(err);
+      console.error("Exception in fetchStats:", err);
+      setError('An unexpected error occurred: ' + (err.message || err));
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +64,38 @@ const FeedbackResultsScreen = () => {
   };
 
   const renderOverview = () => {
-    if (!statsData) return null;
+    if (!statsData) {
+      console.log("No stats data available");
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No feedback data available yet</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchStats}
+          >
+            <Text style={styles.retryButtonText}>Refresh Data</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     
     const { likes, dislikes, total_responses } = statsData;
+    
+    // If there are no responses yet
+    if (total_responses === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No feedback has been submitted yet</Text>
+          <Text style={styles.subtleText}>Your feedback was the first one!</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchStats}
+          >
+            <Text style={styles.retryButtonText}>Refresh Data</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     
     const pieChartData = [
       { x: 'Like', y: likes.count, color: '#1DA1F2' },
@@ -97,6 +139,12 @@ const FeedbackResultsScreen = () => {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No data available</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchStats}
+          >
+            <Text style={styles.retryButtonText}>Refresh Data</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -169,7 +217,7 @@ const FeedbackResultsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {isLoading ? (
+        {isLoading && !statsData ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#1DA1F2" />
             <Text style={styles.loadingText}>Loading feedback statistics...</Text>
@@ -272,6 +320,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    minHeight: 400,
   },
   loadingText: {
     marginTop: 15,
@@ -283,6 +332,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    minHeight: 400,
   },
   errorText: {
     color: '#E0245E',
@@ -295,6 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 30,
+    marginTop: 10,
   },
   retryButtonText: {
     color: 'white',
@@ -387,10 +438,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 200,
+    width: '100%',
   },
   emptyText: {
     fontSize: 16,
     color: '#657786',
+    textAlign: 'center',
+  },
+  subtleText: {
+    fontSize: 14,
+    color: '#AAB8C2',
+    marginTop: 8,
+    textAlign: 'center',
   },
   reasonsLegend: {
     marginTop: 20,

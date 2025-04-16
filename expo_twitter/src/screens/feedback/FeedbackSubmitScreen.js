@@ -23,20 +23,32 @@ const FeedbackSubmitScreen = ({ feedbackData, onSwipeNext }) => {
     setError(null);
     
     try {
-      const result = await submitFeedback({
+      console.log('Submitting feedback:', {
         likes_app: feedbackData.likesApp,
         selected_reasons: feedbackData.selectedOptions
       });
       
-      if (result.success) {
+      const feedback = {
+        likes_app: feedbackData.likesApp,
+        selected_reasons: feedbackData.selectedOptions
+      };
+      
+      const result = await submitFeedback(feedback);
+      
+      console.log('Feedback submission result:', result);
+      
+      // If result exists and doesn't have an error property
+      if (result) {
+        console.log('Feedback submitted successfully, navigating to results');
         // Move to the results screen
         onSwipeNext();
       } else {
-        setError(result.error || 'Failed to submit feedback');
+        console.error('Feedback submission failed:', result ? result.error : 'Unknown error');
+        setError(result?.error || 'Failed to submit feedback');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
-      console.error(err);
+      console.error('Unexpected error during feedback submission:', err);
+      setError('An unexpected error occurred: ' + (err.message || err));
     } finally {
       setIsSubmitting(false);
     }

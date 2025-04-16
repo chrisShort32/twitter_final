@@ -374,34 +374,47 @@ export const toggleFollow = async (username) => {
 }; 
 
 /**
- * Submit user feedback from the survey
- * @param {Object} feedbackData - Feedback data including likes_app and selected_reasons
- * @returns {Promise<Object>} - Success or error message
+ * Submit user feedback
+ * @param {Object} feedbackData - The feedback data to submit
+ * @returns {Promise<Object>} - Response from the API
  */
 export const submitFeedback = async (feedbackData) => {
   try {
-    const user = await AsyncStorage.getItem('user');
-    const userData = user ? JSON.parse(user) : null;
+    console.log("Submitting feedback:", feedbackData);
     
-    const response = await fetch(`${API_BASE_URL}/feedback/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(userData?.token ? { 'Authorization': `Bearer ${userData.token}` } : {}),
-      },
+    const token = await getToken();
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/feedback/submit/`, {
+      method: "POST",
+      headers,
       body: JSON.stringify(feedbackData),
     });
     
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     
-    if (response.ok) {
-      return { success: true, data };
-    } else {
-      return { success: false, error: data.error || 'Failed to submit feedback' };
+    if (!response.ok) {
+      console.error("Feedback submission failed:", response.status, data);
+      return { 
+        success: false, 
+        error: data.message || data.error || `Failed to submit feedback: ${response.status}`
+      };
     }
+    
+    console.log("Feedback submitted successfully:", data);
+    return { success: true, data };
   } catch (error) {
-    console.error('Feedback submission error:', error);
-    return { success: false, error: 'An error occurred while submitting feedback' };
+    console.error("Feedback submission error:", error.message || error);
+    return { 
+      success: false, 
+      error: `An error occurred during feedback submission: ${error.message || error}`
+    };
   }
 };
 
@@ -411,6 +424,7 @@ export const submitFeedback = async (feedbackData) => {
  */
 export const getFeedbackStats = async () => {
   try {
+    console.log('Fetching feedback statistics from API...');
     const response = await fetch(`${API_BASE_URL}/feedback/stats/`, {
       method: 'GET',
       headers: {
@@ -418,15 +432,23 @@ export const getFeedbackStats = async () => {
       },
     });
     
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+    console.log('Feedback statistics received:', data);
     
     if (response.ok) {
       return { success: true, data };
     } else {
-      return { success: false, error: data.error || 'Failed to retrieve feedback statistics' };
+      console.error('Error from feedback stats API:', data.error || response.statusText);
+      return { 
+        success: false, 
+        error: data.error || data.message || `Failed to retrieve feedback statistics (${response.status})`
+      };
     }
   } catch (error) {
     console.error('Feedback statistics retrieval error:', error);
-    return { success: false, error: 'An error occurred while retrieving feedback statistics' };
+    return { 
+      success: false, 
+      error: `An error occurred while retrieving feedback statistics: ${error.message || error}`
+    };
   }
 }; 

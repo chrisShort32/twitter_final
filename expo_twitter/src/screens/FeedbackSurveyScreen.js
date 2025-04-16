@@ -71,6 +71,9 @@ const FeedbackSurveyScreen = () => {
       // From options screen - store selected reasons
       setFeedbackData({ ...feedbackData, selectedOptions: data });
     }
+    // When moving from submit screen to results, no data needs to be stored
+    
+    console.log(`Moving from screen ${currentScreen} to ${currentScreen + 1}`);
     
     // Animate to the next screen
     Animated.timing(position, {
@@ -80,6 +83,11 @@ const FeedbackSurveyScreen = () => {
     }).start(() => {
       position.setValue(0);
       setCurrentScreen(currentScreen + 1);
+      
+      // If moving to the results screen, ensure it's fully visible
+      if (currentScreen === 2) {
+        console.log("Transitioning to results screen");
+      }
     });
   };
   
