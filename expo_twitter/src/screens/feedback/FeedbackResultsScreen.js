@@ -63,6 +63,20 @@ const FeedbackResultsScreen = () => {
   // Start with true since we're using test data
   const [hasLoadedAnyData, setHasLoadedAnyData] = useState(true);
   const [chartKey, setChartKey] = useState(Date.now()); // Key to force chart re-renders
+  const [showDebugView, setShowDebugView] = useState(false); // Debug view toggle
+  
+  // Log component load
+  useEffect(() => {
+    console.log('🧪 DEBUG: Victory library import status check');
+    try {
+      console.log('🧪 VictoryPie available:', !!VictoryPie);
+      console.log('🧪 VictoryBar available:', !!VictoryBar);
+      console.log('🧪 VictoryChart available:', !!VictoryChart);
+      console.log('🧪 VictoryTheme available:', !!VictoryTheme);
+    } catch (err) {
+      console.error('🧪 Error checking Victory components:', err);
+    }
+  }, []);
   
   // Helper to refresh data with visual indicator
   const refreshData = async (showIndicator = true) => {
@@ -209,6 +223,65 @@ const FeedbackResultsScreen = () => {
   // Make sure we always have data to show
   const safeStatsData = statsData || TEST_DATA;
 
+  // Render a fallback text-based overview
+  const renderFallbackOverview = () => {
+    const { likes, dislikes, total_responses } = safeStatsData;
+    const likesCount = likes?.count || 0;
+    const dislikesCount = dislikes?.count || 0;
+    
+    return (
+      <View style={styles.fallbackContainer}>
+        <Text style={styles.fallbackHeader}>Feedback Summary</Text>
+        <Text style={styles.fallbackSubheader}>Total Responses: {total_responses || 0}</Text>
+        
+        <View style={styles.fallbackStatRow}>
+          <Text style={[styles.fallbackStat, {color: '#1DA1F2'}]}>Likes: {likesCount}</Text>
+          <Text style={[styles.fallbackStat, {color: '#E0245E'}]}>Dislikes: {dislikesCount}</Text>
+        </View>
+        
+        <Text style={styles.fallbackPercentage}>
+          {likesCount + dislikesCount > 0 
+            ? `${Math.round((likesCount / (likesCount + dislikesCount)) * 100)}% of users like the app`
+            : "No feedback yet"}
+        </Text>
+        
+        <TouchableOpacity
+          style={styles.debugButton}
+          onPress={() => setShowDebugView(!showDebugView)}
+        >
+          <Text style={styles.debugButtonText}>
+            {showDebugView ? 'Hide Debug Info' : 'Show Debug Info'}
+          </Text>
+        </TouchableOpacity>
+        
+        {showDebugView && (
+          <View style={styles.debugView}>
+            <Text style={styles.debugTitle}>Debug Information</Text>
+            <Text style={styles.debugText}>Victory components present: {!!(VictoryPie && VictoryBar) ? 'Yes' : 'No'}</Text>
+            <Text style={styles.debugText}>Data structure valid: {!!(safeStatsData?.likes?.count !== undefined) ? 'Yes' : 'No'}</Text>
+            <Text style={styles.debugText}>Chart key: {chartKey}</Text>
+            <Text style={styles.debugText}>Total responses: {safeStatsData?.total_responses}</Text>
+            <Text style={styles.debugText}>Data source: {error ? 'Test data (API error)' : 'API data'}</Text>
+            
+            <Text style={styles.debugTitle}>Like Reasons:</Text>
+            {safeStatsData?.likes?.reasons && Object.entries(safeStatsData.likes.reasons).map(([reason, count], i) => (
+              <Text key={i} style={styles.debugText}>
+                - {reason}: {count}
+              </Text>
+            ))}
+            
+            <Text style={styles.debugTitle}>Dislike Reasons:</Text>
+            {safeStatsData?.dislikes?.reasons && Object.entries(safeStatsData.dislikes.reasons).map(([reason, count], i) => (
+              <Text key={i} style={styles.debugText}>
+                - {reason}: {count}
+              </Text>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderOverview = () => {
     if (isLoading && !hasLoadedAnyData) {
       return (
@@ -219,86 +292,107 @@ const FeedbackResultsScreen = () => {
       );
     }
     
-    const { likes, dislikes, total_responses } = safeStatsData;
-    
-    // Ensure likes and dislikes counts exist, default to 0 if not
-    const likesCount = likes?.count || 0;
-    const dislikesCount = dislikes?.count || 0;
-    
-    const pieChartData = [
-      { x: 'Like', y: likesCount, color: '#1DA1F2' },
-      { x: 'Dislike', y: dislikesCount, color: '#E0245E' },
-    ];
-    
-    // If no data or all zeros, show placeholder data
-    if (likesCount === 0 && dislikesCount === 0) {
-      pieChartData[0].y = 1;
-      pieChartData[1].y = 1;
+    try {
+      const { likes, dislikes, total_responses } = safeStatsData;
+      
+      // Ensure likes and dislikes counts exist, default to 0 if not
+      const likesCount = likes?.count || 0;
+      const dislikesCount = dislikes?.count || 0;
+      
+      const pieChartData = [
+        { x: 'Like', y: likesCount, color: '#1DA1F2' },
+        { x: 'Dislike', y: dislikesCount, color: '#E0245E' },
+      ];
+      
+      // If no data or all zeros, show placeholder data
+      if (likesCount === 0 && dislikesCount === 0) {
+        pieChartData[0].y = 1;
+        pieChartData[1].y = 1;
+      }
+      
+      // First attempt with Victory charts
+      try {
+        return (
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Overall Feedback</Text>
+            <Text style={styles.chartSubtitle}>Total Responses: {total_responses || 0}</Text>
+            
+            {isRefreshing && (
+              <View style={styles.refreshIndicator}>
+                <ActivityIndicator size="small" color="#1DA1F2" />
+              </View>
+            )}
+            
+            {error && (
+              <Text style={styles.dataWarning}>{error}</Text>
+            )}
+            
+            <View style={styles.chartWrapper} key={`pie-${chartKey}`}>
+              <VictoryPie
+                data={pieChartData}
+                width={300}
+                height={300}
+                colorScale={pieChartData.map(item => item.color)}
+                style={{ 
+                  labels: { fontSize: 14, fill: '#657786' },
+                  parent: { marginTop: 20 }
+                }}
+                labelRadius={({ innerRadius }) => innerRadius + 65}
+                animate={{
+                  duration: 500,
+                  easing: "bounce"
+                }}
+              />
+            </View>
+            
+            <View style={styles.legendContainer}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#1DA1F2' }]} />
+                <Text style={styles.legendText}>Like ({likesCount})</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#E0245E' }]} />
+                <Text style={styles.legendText}>Dislike ({dislikesCount})</Text>
+              </View>
+            </View>
+            
+            <View style={styles.percentageView}>
+              <Text style={styles.percentageText}>
+                {likesCount + dislikesCount > 0 
+                  ? `${Math.round((likesCount / (likesCount + dislikesCount)) * 100)}% of users like the app`
+                  : "No feedback yet"}
+              </Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={() => refreshData()}
+              disabled={isRefreshing}
+            >
+              <Text style={styles.refreshButtonText}>
+                {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.fallbackButton}
+              onPress={() => setShowDebugView(!showDebugView)}
+            >
+              <Text style={styles.fallbackButtonText}>
+                {showDebugView ? 'Hide Debug' : 'Show Debug'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        );
+      } catch (chartError) {
+        console.error('Error rendering Victory chart:', chartError);
+        // Fall back to text-based view if Victory charts fail
+        return renderFallbackOverview();
+      }
+    } catch (error) {
+      console.error('Error in renderOverview:', error);
+      return renderFallbackOverview();
     }
-    
-    return (
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Overall Feedback</Text>
-        <Text style={styles.chartSubtitle}>Total Responses: {total_responses || 0}</Text>
-        
-        {isRefreshing && (
-          <View style={styles.refreshIndicator}>
-            <ActivityIndicator size="small" color="#1DA1F2" />
-          </View>
-        )}
-        
-        {error && (
-          <Text style={styles.dataWarning}>{error}</Text>
-        )}
-        
-        <View style={styles.chartWrapper} key={`pie-${chartKey}`}>
-          <VictoryPie
-            data={pieChartData}
-            width={300}
-            height={300}
-            colorScale={pieChartData.map(item => item.color)}
-            style={{ 
-              labels: { fontSize: 14, fill: '#657786' },
-              parent: { marginTop: 20 }
-            }}
-            labelRadius={({ innerRadius }) => innerRadius + 65}
-            animate={{
-              duration: 500,
-              easing: "bounce"
-            }}
-          />
-        </View>
-        
-        <View style={styles.legendContainer}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#1DA1F2' }]} />
-            <Text style={styles.legendText}>Like ({likesCount})</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#E0245E' }]} />
-            <Text style={styles.legendText}>Dislike ({dislikesCount})</Text>
-          </View>
-        </View>
-        
-        <View style={styles.percentageView}>
-          <Text style={styles.percentageText}>
-            {likesCount + dislikesCount > 0 
-              ? `${Math.round((likesCount / (likesCount + dislikesCount)) * 100)}% of users like the app`
-              : "No feedback yet"}
-          </Text>
-        </View>
-        
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={() => refreshData()}
-          disabled={isRefreshing}
-        >
-          <Text style={styles.refreshButtonText}>
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
   };
 
   const renderReasonChart = (type) => {
@@ -507,9 +601,17 @@ const FeedbackResultsScreen = () => {
                 </TouchableOpacity>
               </View>
               
-              {activeView === 'overview' && renderOverview()}
-              {activeView === 'likes' && renderReasonChart('likes')}
-              {activeView === 'dislikes' && renderReasonChart('dislikes')}
+              {/* Always show the fallback view for reliable results display */}
+              {renderFallbackOverview()}
+              
+              {/* Conditionally attempt to render chart views */}
+              {!showDebugView && (
+                <>
+                  {activeView === 'overview' && renderOverview()}
+                  {activeView === 'likes' && renderReasonChart('likes')}
+                  {activeView === 'dislikes' && renderReasonChart('dislikes')}
+                </>
+              )}
             </>
           )}
           
@@ -798,6 +900,92 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  fallbackContainer: {
+    backgroundColor: '#F8F9FA',
+    padding: 20,
+    borderRadius: 10,
+    margin: 10,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+  },
+  fallbackHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1DA1F2',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  fallbackSubheader: {
+    fontSize: 16,
+    color: '#657786',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  fallbackStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 15,
+  },
+  fallbackStat: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  fallbackPercentage: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 10,
+    color: '#14171A',
+  },
+  fallbackButton: {
+    backgroundColor: '#F5F8FA',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#AAB8C2',
+  },
+  fallbackButtonText: {
+    color: '#657786',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  debugButton: {
+    backgroundColor: '#F5F8FA',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#AAB8C2',
+    alignSelf: 'center',
+  },
+  debugButtonText: {
+    color: '#657786',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  debugView: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#F5F8FA',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#14171A',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#657786',
+    marginBottom: 3,
   },
 });
 
