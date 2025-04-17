@@ -41,7 +41,7 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
 
   const handleReYeet = async () => {
     try {
-      await axios.post('/api/reyeet_unreyeet/', {
+      await axios.post(`${API_BASE_URL}/reyeet_unreyeet/`, {
         username: user.username,
         post_id: post.post_id,
       });
