@@ -69,7 +69,11 @@ const PostInput = ({onPostSuccess}) => {
         }
       }
    
-      await axios.post('http://54.147.244.63:8000/api/post_yeet/', {
+     const API_BASE_URL =
+        Platform.OS === 'web'
+        ? '/api'
+        : 'https://group3twitter.hopto.org/api';
+      await axios.post(`${API_BASE_URL}/post_yeet/`, {
           username: user.username,
           post_content: postText,
           latitude,

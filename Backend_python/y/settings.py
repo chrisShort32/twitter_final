@@ -21,7 +21,8 @@ warnings.filterwarnings(
 import os
 from pathlib import Path
 from datetime import timedelta
-
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,7 +36,7 @@ SECRET_KEY = 'django-insecure-7ky#88^y(^mqo#42nlxa8d3ff3z6yc6p@$i4r!xnup&xxl@4x&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['54.147.244.63', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['54.147.244.63', 'localhost', '127.0.0.1', 'group3twitter.hopto.org']
 
 
 # Application definition
@@ -179,6 +180,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:19006',
     'exp://localhost:19000',
     'exp://127.0.0.1:19000',
+    'https://group3twitter.hopto.org:8081',
+    'https://group3twitter.hopto.org',
 ]
 
 # Also allow any origins in development
@@ -187,7 +190,7 @@ if DEBUG:
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        #'rest_framework.authentication.SessionAuthentication',
+       # 'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -208,7 +211,10 @@ SIMPLE_JWT = {
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_LOGIN_METHODS = {'email'}
+#ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
 SILENCED_SYSTEM_CHECKS = [
     'allauth.W001', # silence username required warning
     'allauth.W002', # silence email required warning

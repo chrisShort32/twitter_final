@@ -152,6 +152,8 @@ const UserProfileScreen = ({ route, navigation }) => {
   const handleTabPress = (tab) => {
     setActiveTab(tab);
   };
+ 
+  console.log("AvatarCard user:", profile);
 
   if (loading) {
     return (

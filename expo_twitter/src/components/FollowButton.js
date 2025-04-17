@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text,Platform, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios'
 
 const FollowButton = ({ 
@@ -17,13 +17,18 @@ const FollowButton = ({
     return null;
   }
 
+  const API_BASE_URL =
+     Platform.OS === 'web'
+     ? '/api'
+     : 'https://group3twitter.hopto.org/api';
+
   const handleFollow = async () => {
     const newState = !isFollowing;
     setIsFollowing(newState);
     setFollowersCount(followersCount + (newState ? 1 : -1));
     try {
       
-      const result = await axios.post(`http://54.147.244.63:8000/follow_toggle/`, {
+      const result = await axios.post(`${API_BASE_URL}/follow_toggle/`, {
         username: targetUsername
       }, {
         headers: {

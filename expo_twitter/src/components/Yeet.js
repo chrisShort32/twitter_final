@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity,Platform, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import MapModal from './MadModal';
@@ -20,9 +20,13 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const showMap = () => setMapVisible(true);
   const hideMap = () => setMapVisible(false);
 
+  const API_BASE_URL =
+  Platform.OS === 'web'
+    ? '/api'
+    : 'https://group3twitter.hopto.org/api';
   const handleLike = async () => {
     try {
-      await axios.post('http://54.147.244.63:8000/api/like_unlike/', {
+      await axios.post(`${API_BASE_URL}/like_unlike/`, {
         username: user.username,
         post_id: post.post_id,
       });
@@ -37,7 +41,7 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
 
   const handleReYeet = async () => {
     try {
-      await axios.post('http://54.147.244.63:8000/api/reyeet_unreyeet/', {
+      await axios.post('/api/reyeet_unreyeet/', {
         username: user.username,
         post_id: post.post_id,
       });

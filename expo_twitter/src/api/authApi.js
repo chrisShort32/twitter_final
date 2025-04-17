@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-const API_BASE_URL = 'http://54.147.244.63:8000/api';
-
+//const API_BASE_URL = 'http://54.147.244.63:8000/api';
+const API_BASE_URL =
+  Platform.OS === 'web'
+    ? '/api'
+    : 'https://group3twitter.hopto.org/api';
 /**
  * Login a user with email and password
  * @param {string} email - User's email
@@ -12,8 +15,10 @@ export const loginUser = async (email, password) => {
   try {
      console.log('Request body:', JSON.stringify({ email, password }));
      await AsyncStorage.removeItem('user');
-    // Make HTTP request for login
-    const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+     // Make HTTP request for login
+     console.log('Final login URL:', `${API_BASE_URL}/auth/login/`);
+
+     const response = await fetch(`${API_BASE_URL}/auth/login/`, {
        method: 'POST',
        headers: {
           'Content-Type': 'application/json',
@@ -21,12 +26,17 @@ export const loginUser = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
 
+    console.log('Login response status:', response.status);
+    console.log('Login response headers:', response.headers);
+
     const data = await response.json();
 
     if (response.ok && data.access) {
         const { access, user } = data;
 
         console.log('user', user);
+        console.log('Profile pic fetch URL:', `${API_BASE_URL}/profile_pic/?user_id=${user.pk}`);
+
         const pic_data_response = await fetch(`${API_BASE_URL}/profile_pic?user_id=${user.pk}`, {
           method: 'GET',
           headers: {'Content-Type': 'application/json'},
@@ -56,7 +66,7 @@ export const loginUser = async (email, password) => {
 
 export const googleSignIn = async (userData) => {
   try {
-      const loginResponse = await fetch('http://54.147.244.63:8000/auth/google-login/', {
+      const loginResponse = await fetch(`${API_BASE_URL}/auth/google-login/`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(userData),
@@ -96,7 +106,7 @@ export const validateNewUser = async(userData) => {
     console.log("user data: ", JSON.stringify(userData));
 
     // send the data
-    const response = await fetch("http://54.147.244.63:8000/validate_new_user/", {
+    const response = await fetch(`${API_BASE_URL}/validate_new_user/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -271,7 +281,7 @@ export const searchUsers = async (searchTerm) => {
       return { success: false, error: 'User not authenticated' };
     }
 
-    const response = await fetch(`http://54.147.244.63:8000/search_users/?query=${encodeURIComponent(searchTerm)}`, {
+    const response = await fetch(`${API_BASE_URL}/search_users/?query=${encodeURIComponent(searchTerm)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -306,7 +316,7 @@ export const getUserProfile = async (username) => {
     }
 
     console.log(`[getUserProfile] Fetching profile for: ${username}`);
-    const url = `http://54.147.244.63:8000/user_profile/${encodeURIComponent(username)}/`;
+    const url = `${API_BASE_URL}/user_profile/${encodeURIComponent(username)}/`;
     console.log(`[getUserProfile] URL: ${url}`);
     
     const response = await fetch(url, {
@@ -354,7 +364,7 @@ export const toggleFollow = async (username) => {
       return { success: false, error: 'User not authenticated' };
     }
 
-    const response = await fetch(`http://54.147.244.63:8000/follow_toggle/`, {
+    const response = await fetch(`${API_BASE_URL}/follow_toggle/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -465,12 +475,12 @@ export const getFeedbackStats = async () => {
       });
       
       clearTimeout(timeoutId);
-      console.log(`📊 Feedback stats response status: ${response.status}`);
+      console.log(`Feedback stats response status: ${response.status}`);
       
       let data;
       try {
         data = await response.json();
-        console.log('📊 Feedback statistics received, data structure:', 
+        console.log('Feedback statistics received, data structure:', 
           JSON.stringify({
             total_responses: data.total_responses,
             likes_count: data.likes?.count,
@@ -480,7 +490,7 @@ export const getFeedbackStats = async () => {
           })
         );
       } catch (parseError) {
-        console.error("❌ Error parsing response:", parseError);
+        console.error("Error parsing response:", parseError);
         data = {};
         return { 
           success: false, 
