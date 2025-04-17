@@ -26,3 +26,4 @@ expo_twitter/ios/.xcode.env.local
 
 __pycache__/
 
+.env
