@@ -114,16 +114,7 @@ const PostInput = ({onPostSuccess}) => {
         Platform.OS === 'web'
         ? '/api'
         : 'https://group3twitter.hopto.org/api';
-      
-        console.log("Attempting to post Yeet with data:", {
-          username: user.username,
-          post_content: postText,
-          latitude,
-          longitude,
-          location_name
-        });
-        
-        await axios.post(`${API_BASE_URL}/post_yeet/`, {
+      await axios.post(`${API_BASE_URL}/post_yeet/`, {
           username: user.username,
           post_content: postText,
           latitude,
@@ -136,14 +127,9 @@ const PostInput = ({onPostSuccess}) => {
       if (onPostSuccess) onPostSuccess();
     } catch (error) {
       console.error('Error posting Yeet:', error);
-      if (error.response) {
-        console.log("Server responded with:", error.response.data);
-      } else {
-        console.log("Unhandled error:", error.message);
-      }
     }
-};
-    
+        
+  };
 
   
   return (
