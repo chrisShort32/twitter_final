@@ -1,14 +1,47 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, Switch, Platform } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location'
 import { useAuth } from '../context/AuthContext';
+import { getLocationConsent, saveLocationConsent } from '../api/authApi';
 
 const PostInput = ({onPostSuccess}) => {
   const {user} = useAuth();
   const [postText, setPostText] = useState('');
   const [useLocation, setUseLocation] = useState(false);
-  
+  const [locationConsentGiven, setLocationConsentGiven] = useState(false);
+
+  useEffect(() => {
+    const checkConsent = async () => {
+      const hasConsent = await getLocationConsent();
+      if (!hasConsent) {
+        Alert.alert(
+          'Location Permission',
+          'Do you allow us to access your location when you toggle location on?',
+          [
+            {
+              text: 'No',
+              onPress: () => {
+                setLocationConsentGiven(false);
+              },
+              style: 'cancel'
+            },
+            {
+              text: 'Yes',
+              onPress: async () => {
+                await saveLocationConsent();
+                setLocationConsentGiven(true);
+              }
+            }
+          ]
+        );
+      } else {
+        setLocationConsentGiven(true);
+      }
+    };
+    checkConsent();
+  }, []);
+
   const handlePost = async () => {
     if (!postText.trim()) return;
   
@@ -18,6 +51,14 @@ const PostInput = ({onPostSuccess}) => {
   
     try {
       if (useLocation) {
+        if (!locationConsentGiven) {
+          Alert.alert(
+            'Location Consent Required',
+            'You must allow location usage before you can post with location'
+          );
+          return;
+        }
+    
         if (Platform.OS === 'web') {
           const getWebLocation =  () => {
             return new Promise((resolve, reject) => {
