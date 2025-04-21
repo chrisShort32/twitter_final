@@ -40,6 +40,7 @@ const HomeScreen = ({ navigation }) => {
         // Check cookie consent
         const consentKey = `userConsent-${user.id}`;
         const consent = await AsyncStorage.getItem(consentKey);
+        console.log('this is consent',consent);
         if (!consent && isActive) {
           setShowConsentModal(true);
         }
@@ -104,6 +105,7 @@ const HomeScreen = ({ navigation }) => {
   };
   const handleLogout = async () => {
     await logout();
+    setShowConsentModal(false);
     // Navigation is handled by the AuthContext
   };
 
