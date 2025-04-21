@@ -7,7 +7,8 @@ const API_BASE_URL =
     ? '/api'
     : 'https://group3twitter.hopto.org/api';
 
-    
+
+
 export const setSecureToken = async (token) => {
   if (Platform.OS === 'web') {
     localStorage.setItem('token', token);
@@ -247,6 +248,7 @@ export const logoutUser = async () => {
     // Clear user session
     await AsyncStorage.removeItem("user");
     await removeSecureToken();
+    setUser(null);
     
     return { success: true };
   } catch (error) {

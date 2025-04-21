@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -34,7 +34,7 @@ const AppNavigator = () => {
         {isAuthenticated ? (
           // User is signed in
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} key={user?.id}/>
             <Stack.Screen 
               name="UserProfile" 
               component={UserProfileScreen} 

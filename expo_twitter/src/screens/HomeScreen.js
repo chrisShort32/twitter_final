@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,24 +15,92 @@ import FollowingFeed from '../components/FollowingFeed';
 import MyPostsFeed from '../components/myPostsFeed';
 import SearchBar from '../components/SearchBar';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CookieConsentModal from '../components/Consent';
+import { addScreenView, startScreenTimer, stopScreenTimer} from '../utils/Tracking';
+
 
 
 
 const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
   const [activeTab, setActiveTab] = useState('following');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);  
- 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showConsentModal, setShowConsentModal] = useState(false); 
+  
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+  
+      const runFocusTasks = async () => {
+        // Tracking
+        addScreenView('HomeScreen');
+        startScreenTimer();
+  
+        // Check cookie consent
+        const consentKey = `userConsent-${user.id}`;
+        const consent = await AsyncStorage.getItem(consentKey);
+        if (!consent && isActive) {
+          setShowConsentModal(true);
+        }
+  
+        // Refresh
+        if (isActive) {
+          setRefreshTrigger(prev => prev + 1);
+        }
+      };
+  
+      runFocusTasks();
+  
+      return () => {
+        isActive = false;
+        stopScreenTimer('HomeScreen');
+      };
+    }, [user.id])
+  );
+  
+
+  
+
+  //useFocusEffect(
+  //  useCallback(() => {
+  //    const checkConsent = async () => {
+  //      const consentKey = `userConsent-${user.id}`;
+  //      const consent = await AsyncStorage.getItem(consentKey);
+  //      if (!consent) {
+  //        setShowConsentModal(true);
+  //      }
+  //    };
+  //    checkConsent();
+  //    setRefreshTrigger(prev => prev + 1);
+  //  }, [user.id])
+  //);
+
+  const handleConsentAccept = async () => {
+    const consentKey = `userConsent-${user.id}`;
+    await AsyncStorage.setItem(consentKey, JSON.stringify({accepted: true, timestamp: Date.now()}));
+    setShowConsentModal(false);
+  }
+
+  const handleConsentDecline = async () => {
+    const consentKey = `userConsent-${user.id}`;
+    await AsyncStorage.setItem(consentKey, JSON.stringify({accepted: false, timestamp: Date.now()}));
+    setShowConsentModal(false);
+  };
+
   const handlePostSuccess = () => {
     setRefreshTrigger(prev => prev + 1)
+    incrementButtonStat('postCreated');
   };
 
   const handleLikeSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
+    incrementButtonStat('likePressed');
     };
 
   const handleReYeetSuccess = () => {
     setRefreshTrigger(prev => prev + 1)
+    incrementButtonStat('reyeetPressed');
   };
   const handleLogout = async () => {
     await logout();
@@ -41,16 +109,23 @@ const HomeScreen = ({ navigation }) => {
 
   const handleFeedbackSurvey = () => {
     navigation.navigate('FeedbackSurvey');
+    incrementButtonStat('feedbackOpened');
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      setRefreshTrigger(prev => prev + 1);
-    }, [])
-  );
+  //useFocusEffect(
+  //  useCallback(() => {
+  //    setRefreshTrigger(prev => prev + 1);
+  //  }, [])
+  //);
 
   return (
     <SafeAreaView style={styles.container}>
+      <CookieConsentModal
+        visible={showConsentModal}
+        onAccept={handleConsentAccept}
+        onDecline={handleConsentDecline}
+      />
+      
       <ScrollView>
       {/* Header */}
       <View style={styles.header}>
