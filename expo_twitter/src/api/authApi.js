@@ -1,28 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-//const API_BASE_URL = 'http://54.147.244.63:8000/api';
+
 const API_BASE_URL =
   Platform.OS === 'web'
     ? '/api'
     : 'https://group3twitter.hopto.org/api';
-
-export const saveLocationConsent = async () => {
-  if (Platform.OS == 'web'){
-    document.cookie = "locationConsent=true; path=/; max-age=604800;" // cookie lasts for 7 days
-  }
-  await AsyncStorage.setItem('locationConsent', 'true');
-};
-
-export const getLocationConsent = async () => {
-  if (Platform.OS == 'web') {
-    const cookies = document.cookie.split('; ');
-    const found = cookies.find(c => c.startsWith('locationConsent='));
-    if (found) return true;
-  }
-
-  const val = await AsyncStorage.getItem('locationConsent');
-  return val == 'true';
-};
 
 /**
  * Login a user with email and password
