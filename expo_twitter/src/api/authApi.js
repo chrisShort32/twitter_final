@@ -248,7 +248,6 @@ export const logoutUser = async () => {
     // Clear user session
     await AsyncStorage.removeItem("user");
     await removeSecureToken();
-    setUser(null);
     
     return { success: true };
   } catch (error) {
