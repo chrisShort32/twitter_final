@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  FlatList,
   SafeAreaView,
   Alert,
 } from 'react-native';
@@ -16,6 +15,9 @@ import { useAuth } from '../context/AuthContext';
 import Yeet from '../components/Yeet';
 import FollowButton from '../components/FollowButton';
 import AvatarCard from '../components/avatarCard';
+import SessionStats from '../components/trackedStats';
+
+
 
 const UserProfileScreen = ({ route, navigation }) => {
   const username = route?.params?.username;
@@ -28,7 +30,7 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-
+  
   const handleLikeSuccess = (postId) => {
     const updatedProfile = { ...profile };
   
@@ -154,7 +156,7 @@ const UserProfileScreen = ({ route, navigation }) => {
   };
  
   console.log("AvatarCard user:", profile);
-
+  const isMyProfile = user?.username === profile?.username;
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -198,6 +200,7 @@ const UserProfileScreen = ({ route, navigation }) => {
       <ScrollView style={styles.container}>
         <View style={styles.headerContainer}>
           <AvatarCard user={profile}/>
+          {isMyProfile && <SessionStats visible={true}/>}
         </View>
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>{profile.bio || 'No bio available'}</Text>

@@ -34,7 +34,7 @@ const AppNavigator = () => {
         {isAuthenticated ? (
           // User is signed in
           <>
-            <Stack.Screen name="Home" component={HomeScreen} key={user?.id}/>
+            <Stack.Screen name="Home" component={HomeScreen}/>
             <Stack.Screen 
               name="UserProfile" 
               component={UserProfileScreen} 

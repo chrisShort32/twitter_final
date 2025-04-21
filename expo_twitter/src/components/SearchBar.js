@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { searchUsers } from '../api/authApi';
+import { addRecentSearch } from '../utils/Tracking';
 
 const SearchBar = ({ navigation }) => {
   const [query, setQuery] = useState('');
@@ -19,6 +20,7 @@ const SearchBar = ({ navigation }) => {
   const [searching, setSearching] = useState(false);
 
   const handleSearch = async () => {
+    
     if (!query.trim()) return;
     
     setLoading(true);
@@ -28,7 +30,7 @@ const SearchBar = ({ navigation }) => {
     try {
       console.log("Searching for:", query);
       const response = await searchUsers(query);
-      
+      await addRecentSearch(query);
       if (response.success) {
         console.log("Search results:", response.users);
         setResults(response.users);

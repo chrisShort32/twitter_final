@@ -17,7 +17,7 @@ import SearchBar from '../components/SearchBar';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CookieConsentModal from '../components/Consent';
-import { addScreenView, startScreenTimer, stopScreenTimer} from '../utils/Tracking';
+import { addScreenView, startScreenTimer, stopScreenTimer, incrementButtonStat, addRecentSearch, setLocationToggle} from '../utils/Tracking';
 
 
 
@@ -27,67 +27,63 @@ const HomeScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('following');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showConsentModal, setShowConsentModal] = useState(false); 
-  
+  const [hasCheckedConsent, setHasCheckedConsent] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
   
-      const runFocusTasks = async () => {
-        // Tracking
-        addScreenView('HomeScreen');
-        startScreenTimer();
+      const checkConsent = async () => {
+        if (hasCheckedConsent) return;
   
-        // Check cookie consent
-        const consentKey = `userConsent-${user.id}`;
+        const consentKey = `userConsent-${user.username}`;
         const consent = await AsyncStorage.getItem(consentKey);
-        console.log('this is consent',consent);
         if (!consent && isActive) {
           setShowConsentModal(true);
         }
   
-        // Refresh
         if (isActive) {
-          setRefreshTrigger(prev => prev + 1);
+          setHasCheckedConsent(true);
         }
       };
   
-      runFocusTasks();
+      checkConsent();
   
       return () => {
         isActive = false;
-        stopScreenTimer('HomeScreen');
       };
-    }, [user.id])
+    }, [user.username, hasCheckedConsent])
   );
   
-
   
-
-  //useFocusEffect(
-  //  useCallback(() => {
-  //    const checkConsent = async () => {
-  //      const consentKey = `userConsent-${user.id}`;
-  //      const consent = await AsyncStorage.getItem(consentKey);
-  //      if (!consent) {
-  //        setShowConsentModal(true);
-  //      }
-  //    };
-  //    checkConsent();
-  //    setRefreshTrigger(prev => prev + 1);
-  //  }, [user.id])
-  //);
-
+  useFocusEffect(
+    useCallback(() => {
+      addScreenView('HomeScreen');
+      startScreenTimer();
+  
+      return () => stopScreenTimer('HomeScreen');
+    }, [])
+  );
+  
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, [])
+  );
+  
   const handleConsentAccept = async () => {
-    const consentKey = `userConsent-${user.id}`;
+    const consentKey = `userConsent-${user.username}`;
+    console.log('🍪 Saving consent for:', consentKey);
     await AsyncStorage.setItem(consentKey, JSON.stringify({accepted: true, timestamp: Date.now()}));
     setShowConsentModal(false);
   }
 
   const handleConsentDecline = async () => {
-    const consentKey = `userConsent-${user.id}`;
+    const consentKey = `userConsent-${user.username}`;
     await AsyncStorage.setItem(consentKey, JSON.stringify({accepted: false, timestamp: Date.now()}));
     setShowConsentModal(false);
   };
+
 
   const handlePostSuccess = () => {
     setRefreshTrigger(prev => prev + 1)
@@ -105,7 +101,6 @@ const HomeScreen = ({ navigation }) => {
   };
   const handleLogout = async () => {
     await logout();
-    setShowConsentModal(false);
     // Navigation is handled by the AuthContext
   };
 
@@ -114,11 +109,8 @@ const HomeScreen = ({ navigation }) => {
     incrementButtonStat('feedbackOpened');
   };
 
-  //useFocusEffect(
-  //  useCallback(() => {
-  //    setRefreshTrigger(prev => prev + 1);
-  //  }, [])
-  //);
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>

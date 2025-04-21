@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const getUserId = async () => {
     const user = await AsyncStorage.getItem('user');
-    return user ? JSON.parse(user).id : null;
+    return user ? JSON.parse(user).username : null;
 };
 
 export const addScreenView = async (screenName) => {
