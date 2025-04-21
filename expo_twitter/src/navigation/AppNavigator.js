@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-
+import CubeSwipeScreen from '../screens/CubeSwipeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
@@ -35,6 +35,11 @@ const AppNavigator = () => {
           // User is signed in
           <>
             <Stack.Screen name="Home" component={HomeScreen}/>
+            <Stack.Screen
+              name="CubeSwipe"
+              component={CubeSwipeScreen}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen 
               name="UserProfile" 
               component={UserProfileScreen} 

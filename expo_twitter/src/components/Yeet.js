@@ -4,11 +4,22 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import MapModal from './MadModal';
 import { useNavigation } from '@react-navigation/native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const { user } = useAuth();
   const navigation = useNavigation();
+  
+  const handleSwipe = ({ nativeEvent }) => {
+    if (nativeEvent.translationX < -50) {
+      console.log('Swiped left on post by', post.username);
 
+      // Navigate with cube effect (same navigator, different screen)
+      navigation.navigate('CubeSwipe', {
+        username: post.username, // pass to profile screen
+      });
+    }
+  };
   // Local state 
   const [isLiked, setIsLiked] = useState(post.liked_by_user || false);
   const [isRetweeted, setIsRetweeted] = useState(post.retweeted_by_user || false);
@@ -53,69 +64,131 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
       console.error('Error reYeeting:', error);
     }
   };
+  
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.post}>
+        <TouchableOpacity
+          onPress={() => 
+            navigation.navigate('UserProfile', {
+              username: post.username,
+              timestamp: new Date().getTime(),
+            })
+          }
+        >
+          <Text style={styles.username}>@{post.username}</Text>
+        </TouchableOpacity>
+        <Text style={styles.content}>{post.post_content}</Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.metaText}>
+            {new Date(post.post_timestamp).toLocaleString()}
+          </Text>
+          {typeof post.location_name === 'string' && post.location_name.trim() !== '' && (
+          <Text style={styles.metaText}> • {post.location_name} </Text>
+          )}
+          {post.longitude && post.latitude && (
+            <TouchableOpacity onPress={showMap}>
+              <Text>📍</Text>
+            </TouchableOpacity>
+          )}
 
-  return (
-    <View style={styles.post}>
-      <TouchableOpacity
-        onPress={() => 
-          navigation.navigate('UserProfile', {
-            username: post.username,
-            timestamp: new Date().getTime(),
-          })
-        }
-      >
-        <Text style={styles.username}>@{post.username}</Text>
-      </TouchableOpacity>
-      <Text style={styles.content}>{post.post_content}</Text>
-      <View style={styles.metaRow}>
-        <Text style={styles.metaText}>
-          {new Date(post.post_timestamp).toLocaleString()}
-        </Text>
-        {typeof post.location_name === 'string' && post.location_name.trim() !== '' && (
-        <Text style={styles.metaText}> • {post.location_name} </Text>
-        )}
-        {post.longitude && post.latitude && (
-          <TouchableOpacity onPress={showMap}>
-            <Text>📍</Text>
+          <MapModal
+            visible={mapVisible}
+            onClose={hideMap}
+            location={{ latitude: post.latitude, longitude: post.longitude }}
+          />
+        </View>
+
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
+            <Image
+              source={
+                isLiked
+                  ? require('../../assets/like-filled.png')
+                  : require('../../assets/like.png')
+              }
+              style={styles.icon}
+            />
+            <Text style={styles.actionText}>{likeCount}</Text>
           </TouchableOpacity>
-        )}
 
-        <MapModal
-          visible={mapVisible}
-          onClose={hideMap}
-          location={{ latitude: post.latitude, longitude: post.longitude }}
-        />
+          <TouchableOpacity style={styles.actionButton} onPress={handleReYeet}>
+            <Image
+              source={
+                isRetweeted
+                  ? require('../../assets/retweet-filled.png')
+                  : require('../../assets/retweet.png')
+              }
+              style={styles.icon}
+            />
+            <Text style={styles.actionText}>{retweetCount}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-          <Image
-            source={
-              isLiked
-                ? require('../../assets/like-filled.png')
-                : require('../../assets/like.png')
-            }
-            style={styles.icon}
-          />
-          <Text style={styles.actionText}>{likeCount}</Text>
+    );
+  } else {
+    return (
+      <PanGestureHandler onGestureEvent={handleSwipe}>
+        <View style={styles.post}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('UserProfile', {
+              username: post.username,
+              timestamp: new Date().getTime(),
+            })
+          }
+        >
+          <Text style={styles.username}>@{post.username}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={handleReYeet}>
-          <Image
-            source={
-              isRetweeted
-                ? require('../../assets/retweet-filled.png')
-                : require('../../assets/retweet.png')
-            }
-            style={styles.icon}
+        <Text style={styles.content}>{post.post_content}</Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.metaText}>
+            {new Date(post.post_timestamp).toLocaleString()}
+          </Text>
+          {typeof post.location_name === 'string' && post.location_name.trim() !== '' && (
+            <Text style={styles.metaText}> • {post.location_name} </Text>
+          )}
+          {post.longitude && post.latitude && (
+            <TouchableOpacity onPress={showMap}>
+              <Text>📍</Text>
+            </TouchableOpacity>
+          )}
+          <MapModal
+            visible={mapVisible}
+            onClose={hideMap}
+            location={{ latitude: post.latitude, longitude: post.longitude }}
           />
-          <Text style={styles.actionText}>{retweetCount}</Text>
-        </TouchableOpacity>
+        </View>
+
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
+            <Image
+              source={
+                isLiked
+                  ? require('../../assets/like-filled.png')
+                  : require('../../assets/like.png')
+              }
+              style={styles.icon}
+            />
+            <Text style={styles.actionText}>{likeCount}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={handleReYeet}>
+            <Image
+              source={
+                isRetweeted
+                  ? require('../../assets/retweet-filled.png')
+                  : require('../../assets/retweet.png')
+              }
+              style={styles.icon}
+            />
+            <Text style={styles.actionText}>{retweetCount}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </PanGestureHandler>
   );
-};
-
+}}
 const styles = StyleSheet.create({
   post: {
     flex: 1,
