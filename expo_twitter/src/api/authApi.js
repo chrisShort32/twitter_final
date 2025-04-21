@@ -7,35 +7,32 @@ const API_BASE_URL =
     ? '/api'
     : 'https://group3twitter.hopto.org/api';
 
-    import { Platform } from 'react-native';
-    import * as Keychain from 'react-native-keychain';
     
-    export const setSecureToken = async (token) => {
-      if (Platform.OS === 'web') {
-        localStorage.setItem('token', token);
-      } else {
-        await Keychain.setGenericPassword('token', token);
-      }
-    };
+export const setSecureToken = async (token) => {
+  if (Platform.OS === 'web') {
+    localStorage.setItem('token', token);
+  } else {
+    await Keychain.setGenericPassword('token', token);
+  }
+};
     
-    export const getSecureToken = async () => {
-      if (Platform.OS === 'web') {
-        return localStorage.getItem('token');
-      } else {
-        const creds = await Keychain.getGenericPassword();
-        return creds?.password || null;
-      }
-    };
+export const getSecureToken = async () => {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem('token');
+  } else {
+    const creds = await Keychain.getGenericPassword();
+    return creds?.password || null;
+  }
+};
     
-    export const removeSecureToken = async () => {
-      if (Platform.OS === 'web') {
-        localStorage.removeItem('token');
-      } else {
-        await Keychain.resetGenericPassword();
-      }
-    };
-    
-    
+export const removeSecureToken = async () => {
+  if (Platform.OS === 'web') {
+    localStorage.removeItem('token');
+  } else {
+    await Keychain.resetGenericPassword();
+  }
+};
+       
  /**
  * Login a user with email and password
  * @param {string} email - User's email
