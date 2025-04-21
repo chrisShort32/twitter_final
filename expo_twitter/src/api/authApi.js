@@ -1,12 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import * as Keychain from 'react-native-keychain';
 
 const API_BASE_URL =
   Platform.OS === 'web'
     ? '/api'
     : 'https://group3twitter.hopto.org/api';
 
-/**
+export const getSecureToken = async () => {
+  const creds = await Keychain.getGenericPassword();
+  return creds?.password || null;
+};
+    
+ /**
  * Login a user with email and password
  * @param {string} email - User's email
  * @param {string} password - User's password
@@ -51,10 +57,10 @@ export const loginUser = async (email, password) => {
             email: user.email,
             picture: pic_data.picture,
             auth_type: 'email',
-            token: access, // use token returned from server
+            //token: access, // use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-
+        await Keychain.setGenericPassword('token', access);
        return { success: true, user: userData };
     }  else {
        return { success: false, error: 'Invalid Credentials' };
@@ -82,11 +88,12 @@ export const googleSignIn = async (userData) => {
       
       const fullUserData = {
         ...loginData,
-        token: loginData.access,
+        //token: loginData.access,
       };
 
 
       await AsyncStorage.setItem('user', JSON.stringify(fullUserData));
+      await Keychain.setGenericPassword('token', loginData.access);
       return {success: true, ...fullUserData};
       
   } catch (error) {
@@ -167,11 +174,11 @@ export const registerUser = async (userData) => {
             username: user.username,
 	          email: user.email,
 	          auth_type: 'email',
-            token: access, // Use token returned from server
+            //token: access, // Use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(newUserData));
-        
-        console.log("this is newuserdata: ", newUserData);
+        await Keychain.setGenericPassword('token', access);
+
         return { success: true, user: newUserData };
     }   else {
 	return { success: false, error: 'Registration Failed' };
@@ -219,6 +226,7 @@ export const logoutUser = async () => {
   try {
     // Clear user session
     await AsyncStorage.removeItem("user");
+    await Keychain.removeItem("token");
     
     return { success: true };
   } catch (error) {
@@ -258,12 +266,12 @@ export const verifyToken = async (token) => {
     // In a real app, this would validate the token with your backend
     // For demo purposes, we'll just check if there's a user session
    
-    const userData = await AsyncStorage.getItem("user");
+    //const userData = await AsyncStorage.getItem("user");
+    userToken = await getSecureToken();
+    if (!userToken) return false;
     
-    if (!userData) return false;
-    
-    const user = JSON.parse(userData);
-    return user.token === token;
+    //const user = JSON.parse(userData);
+    return userToken === token;
   } catch (error) {
     console.error("Token verification error:", error);
     return false;
@@ -282,11 +290,12 @@ export const searchUsers = async (searchTerm) => {
       return { success: false, error: 'User not authenticated' };
     }
 
+    const token = await getSecureToken();
     const response = await fetch(`${API_BASE_URL}/search_users/?query=${encodeURIComponent(searchTerm)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`
+        'Authorization': `Bearer ${token}`
       }
     });
 
@@ -320,11 +329,12 @@ export const getUserProfile = async (username) => {
     const url = `${API_BASE_URL}/user_profile/${encodeURIComponent(username)}/`;
     console.log(`[getUserProfile] URL: ${url}`);
     
+    const token = await getSecureToken();
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`
+        'Authorization': `Bearer ${token}`
       }
     });
 
@@ -365,11 +375,12 @@ export const toggleFollow = async (username) => {
       return { success: false, error: 'User not authenticated' };
     }
 
+    const token = await getSecureToken();
     const response = await fetch(`${API_BASE_URL}/follow_toggle/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ username }),
     });
@@ -402,7 +413,7 @@ export const submitFeedback = async (feedbackData) => {
     
     // Use getCurrentUser instead of getToken since getToken might not be defined
     const currentUser = await getCurrentUser();
-    const token = currentUser?.token;
+    const token = await getSecureToken();
     
     const headers = {
       "Content-Type": "application/json",
