@@ -7,10 +7,34 @@ const API_BASE_URL =
     ? '/api'
     : 'https://group3twitter.hopto.org/api';
 
-export const getSecureToken = async () => {
-  const creds = await Keychain.getGenericPassword();
-  return creds?.password || null;
-};
+    import { Platform } from 'react-native';
+    import * as Keychain from 'react-native-keychain';
+    
+    export const setSecureToken = async (token) => {
+      if (Platform.OS === 'web') {
+        localStorage.setItem('token', token);
+      } else {
+        await Keychain.setGenericPassword('token', token);
+      }
+    };
+    
+    export const getSecureToken = async () => {
+      if (Platform.OS === 'web') {
+        return localStorage.getItem('token');
+      } else {
+        const creds = await Keychain.getGenericPassword();
+        return creds?.password || null;
+      }
+    };
+    
+    export const removeSecureToken = async () => {
+      if (Platform.OS === 'web') {
+        localStorage.removeItem('token');
+      } else {
+        await Keychain.resetGenericPassword();
+      }
+    };
+    
     
  /**
  * Login a user with email and password
@@ -57,10 +81,9 @@ export const loginUser = async (email, password) => {
             email: user.email,
             picture: pic_data.picture,
             auth_type: 'email',
-            //token: access, // use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await Keychain.setGenericPassword('token', access);
+        await setSecureToken(access);
        return { success: true, user: userData };
     }  else {
        return { success: false, error: 'Invalid Credentials' };
@@ -93,7 +116,7 @@ export const googleSignIn = async (userData) => {
 
 
       await AsyncStorage.setItem('user', JSON.stringify(fullUserData));
-      await Keychain.setGenericPassword('token', loginData.access);
+      await setSecureToken(loginData.access);
       return {success: true, ...fullUserData};
       
   } catch (error) {
@@ -177,7 +200,7 @@ export const registerUser = async (userData) => {
             //token: access, // Use token returned from server
         };
         await AsyncStorage.setItem('user', JSON.stringify(newUserData));
-        await Keychain.setGenericPassword('token', access);
+        await setSecureToken(access);
 
         return { success: true, user: newUserData };
     }   else {
@@ -226,7 +249,7 @@ export const logoutUser = async () => {
   try {
     // Clear user session
     await AsyncStorage.removeItem("user");
-    await Keychain.removeItem("token");
+    await removeSecureToken();
     
     return { success: true };
   } catch (error) {
@@ -263,10 +286,6 @@ export const getCurrentUser = async () => {
  */
 export const verifyToken = async (token) => {
   try {
-    // In a real app, this would validate the token with your backend
-    // For demo purposes, we'll just check if there's a user session
-   
-    //const userData = await AsyncStorage.getItem("user");
     userToken = await getSecureToken();
     if (!userToken) return false;
     
