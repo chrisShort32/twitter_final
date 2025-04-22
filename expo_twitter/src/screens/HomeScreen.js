@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect} from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,7 +7,6 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import PostInput from '../components/PostInput';
@@ -17,10 +16,7 @@ import SearchBar from '../components/SearchBar';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CookieConsentModal from '../components/Consent';
-import { addScreenView, startScreenTimer, stopScreenTimer, incrementButtonStat, addRecentSearch, setLocationToggle} from '../utils/Tracking';
-
-
-
+import { addScreenView, startScreenTimer, stopScreenTimer, incrementButtonStat } from '../utils/Tracking';
 
 const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
@@ -73,7 +69,6 @@ const HomeScreen = ({ navigation }) => {
   
   const handleConsentAccept = async () => {
     const consentKey = `userConsent-${user.username}`;
-    console.log('🍪 Saving consent for:', consentKey);
     await AsyncStorage.setItem(consentKey, JSON.stringify({accepted: true, timestamp: Date.now()}));
     setShowConsentModal(false);
   }
@@ -126,7 +121,6 @@ const HomeScreen = ({ navigation }) => {
         <TouchableOpacity 
           style={styles.profileButton}
           onPress={() => {
-            console.log('Navigating to my profile');
             navigation.push('UserProfile', { 
               username: user.username,
               timestamp: new Date().getTime(),

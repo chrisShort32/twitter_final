@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState } from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, Switch, Platform } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location'

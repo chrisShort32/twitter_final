@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import { View, Text,Platform, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios'
 

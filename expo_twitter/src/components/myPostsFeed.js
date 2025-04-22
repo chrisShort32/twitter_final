@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Text, FlatList, StyleSheet, Platform } from 'react-native';
+import {Text, FlatList, Platform } from 'react-native';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Yeet from './Yeet';

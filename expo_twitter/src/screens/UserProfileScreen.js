@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Image,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -67,10 +66,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     setProfile(updatedProfile);
   };
   
-
   useEffect(() => {
-    console.log('[UserProfileScreen] Mounted with username:', username, 'timestamp:', timestamp);
-    
     if (!username) {
       console.error('[UserProfileScreen] No username provided');
       setError('No username provided. Please try again.');
@@ -88,7 +84,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     
     // Return cleanup function
     return () => {
-      console.log('[UserProfileScreen] Unmounting for username:', username);
+
     };
   }, [username, timestamp]);
 
@@ -97,8 +93,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     setError('');
     
     try {
-      console.log('[UserProfileScreen] Fetching profile for:', username);
-      
       // Add timeout protection in case API never responds
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
@@ -110,10 +104,7 @@ const UserProfileScreen = ({ route, navigation }) => {
         timeoutPromise
       ]);
       
-      console.log('[UserProfileScreen] Response received:', JSON.stringify(response));
-      
       if (response.success && response.profile) {
-        console.log('[UserProfileScreen] Profile data received:', response.profile);
         setProfile(response.profile);
         
         // Make sure these property names match what your backend returns
@@ -157,7 +148,6 @@ const UserProfileScreen = ({ route, navigation }) => {
     setActiveTab(tab);
   };
  
-  console.log("AvatarCard user:", profile);
   const isMyProfile = user?.username === profile?.username;
   if (loading) {
     return (
@@ -398,7 +388,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerContainer: {
-    marginLeft: 40,
+    marginLeft: 15,
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
@@ -424,7 +414,8 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   statsContainer: {
-    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 50,
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',

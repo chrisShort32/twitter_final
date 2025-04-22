@@ -62,7 +62,7 @@ const LoginScreen = ({ navigation }) => {
       }
       
       const userInfo = await userInfoResponse.json();
-      console.log("userInfo: ", JSON.stringify(userInfo));
+      
       // Create or sign in the user
       const userData = {
         id: userInfo.id,
@@ -75,17 +75,16 @@ const LoginScreen = ({ navigation }) => {
       };
       
       const result = await signInWithGoogle(userData);
-      console.log("signInWithGoogle result: ", JSON.stringify(result));
+      
       if (result.success) {
-        console.log("User logged in or created successfully");
       } else {
           throw new Error("Google login/register failed");
       }
       
-    } catch (error) {
-      console.error("Google sign in error:", error);
-    }
-  };
+      } catch (error) {
+        console.error("Google sign in error:", error);
+      }
+    };
 
   const handleLogin = async () => {
     if (!email || !password1) {
@@ -113,7 +112,7 @@ const LoginScreen = ({ navigation }) => {
     {regex: /[A-Z]/, message: "Password must contain at least one uppercase letter"},
     {regex: /[a-z]/, message: "Password must contain at least one lowercase letter"},
     {regex: /[0-9]/, message: "Password must contain at least one number"},
-    {regex: /[^A-Za_z0-9]/, message: "Password must contain at least one special character"},
+    {regex: /[^A-Za-z0-9]/, message: "Password must contain at least one special character"},
     {regex: /.{8,}/, message: "Password must be at least 8 characters long"},
     {regex: /^((?!password).)*$/i, message: "Password cannot contain the word 'password'"},
     {regex: /^(?!.*email|.*username)/i, message: "Password cannot contain the email or username"}
@@ -156,7 +155,6 @@ const LoginScreen = ({ navigation }) => {
     }
     
     const validationMessage = validatePassword(username, email, password1)
-    console.log("Validation Message: ", validationMessage);
     if (validationMessage != null) {
       alert(validationMessage);
       return;
@@ -164,7 +162,6 @@ const LoginScreen = ({ navigation }) => {
 
     const validateInfoMessage = await validateUsernameEmail(username, email);
     if (validateInfoMessage != null) {
-      console.log(JSON.stringify(validateInfoMessage));
       alert(JSON.stringify(validateInfoMessage));
       return;
     }

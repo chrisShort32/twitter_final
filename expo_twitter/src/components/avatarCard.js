@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f8fa',
     borderRadius: 12,
     marginBottom: 16,
-    maxWidth: 275,
+    maxWidth: 325,
   },
   avatar: {
     width: 150,

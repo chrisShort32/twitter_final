@@ -28,19 +28,15 @@ const SearchBar = ({ navigation }) => {
     setSearching(true);
     
     try {
-      console.log("Searching for:", query);
       const response = await searchUsers(query);
       await addRecentSearch(query);
       if (response.success) {
-        console.log("Search results:", response.users);
         setResults(response.users);
       } else {
-        console.error("Search error:", response.error);
         setError(response.error);
         setResults([]);
       }
     } catch (err) {
-      console.error("Search exception:", err);
       setError('An error occurred while searching');
       setResults([]);
     } finally {
@@ -49,7 +45,6 @@ const SearchBar = ({ navigation }) => {
   };
 
   const handleProfileNavigation = (username) => {
-    console.log('Navigating to profile for:', username);
     
     // Clear search UI immediately
     setSearching(false);
@@ -58,7 +53,6 @@ const SearchBar = ({ navigation }) => {
     
     // Force navigation with a small delay
     setTimeout(() => {
-      console.log('Executing delayed navigation to:', username);
       
       // Force a navigation reset to ensure it works
       navigation.reset({
@@ -123,33 +117,7 @@ const SearchBar = ({ navigation }) => {
               key={item.id ? item.id.toString() : item.username} 
               style={styles.resultItem}
               onPress={() => {
-                console.log('Profile item clicked for:', item.username);
-                
-                // Clear search UI immediately
-                setSearching(false);
-                setQuery('');
-                setResults([]);
-                
-                // Force navigation with a small delay
-                const username = item.username;
-                setTimeout(() => {
-                  console.log('Executing delayed navigation to:', username);
-                  
-                  // Force a navigation reset to ensure it works
-                  navigation.reset({
-                    index: 1,
-                    routes: [
-                      { name: 'Home' },
-                      { 
-                        name: 'UserProfile', 
-                        params: { 
-                          username: username,
-                          timestamp: new Date().getTime() 
-                        }
-                      }
-                    ]
-                  });
-                }, 100);
+                handleProfileNavigation(item.username)
               }}
               activeOpacity={0.5}
             >
