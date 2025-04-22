@@ -1,25 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity,Platform, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import MapModal from './MadModal';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import { useCubeNav } from '../context/CubeNavigationContext';
 
 const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
+  const [hasNavigated, setHasNavigated] = useState(false);
   const { user } = useAuth();
   const navigation = useNavigation();
+  const { pushProfile } = useCubeNav();
   
   const handleSwipe = ({ nativeEvent }) => {
-    if (nativeEvent.translationX < -50) {
+    if (nativeEvent.translationX < -50 && !hasNavigated) {
       console.log('Swiped left on post by', post.username);
-
+      setHasNavigated(true);
+      
       // Navigate with cube effect (same navigator, different screen)
-      navigation.navigate('CubeSwipe', {
+      if (post.username === user?.username) return;
+      pushProfile(post.username);
+      navigation.push('CubeSwipe', {
         username: post.username, // pass to profile screen
       });
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setHasNavigated(false);
+    });
+  
+    return unsubscribe;
+  }, [navigation]);
+  
   // Local state 
   const [isLiked, setIsLiked] = useState(post.liked_by_user || false);
   const [isRetweeted, setIsRetweeted] = useState(post.retweeted_by_user || false);
@@ -128,11 +143,15 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
     );
   } else {
     return (
-      <PanGestureHandler onGestureEvent={handleSwipe}>
+      <PanGestureHandler
+        onGestureEvent={handleSwipe}
+        activeOffsetX={[-30, 30]}
+        failOffsetY={[-10, 10]}
+       >
         <View style={styles.post}>
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate('UserProfile', {
+            navigation.push('UserProfile', {
               username: post.username,
               timestamp: new Date().getTime(),
             })

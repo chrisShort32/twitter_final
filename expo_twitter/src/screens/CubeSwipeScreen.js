@@ -1,29 +1,28 @@
 import React from 'react';
-import { Platform, View, Text } from 'react-native';
-import CubeTransition from 'react-native-cube-transition';
-import UserProfileScreen from './UserProfileScreen'; // adjust if needed
+import CubeProfileTransition from '../components/CubeProfileTransition';
 
-const CubeSwipeScreen = ({ route }) => {
+const CubeSwipeScreen = ({ route, navigation }) => {
   const { username } = route.params;
 
-  return Platform.select({
-    web: () => (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>This swipe feature is mobile-only</Text>
-      </View>
-    ),
-    default: () => (
-      <CubeTransition
-        pages={[
-          <UserProfileScreen
-            key="profile"
-            route={{ params: { username, timestamp: Date.now() } }}
-          />,
-        ]}
-      />
-    ),
-  })();
+  if (!username) {
+    console.warn('[CubeSwipeScreen] No username passed!');
+    return null;
+  }
+
+  return (
+    <CubeProfileTransition
+      username={username}
+      onClose={() => {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        }
+      }}
+    />
+  );
 };
 
 export default CubeSwipeScreen;
+
+
+
 

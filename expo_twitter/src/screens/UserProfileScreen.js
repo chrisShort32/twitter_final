@@ -16,10 +16,11 @@ import Yeet from '../components/Yeet';
 import FollowButton from '../components/FollowButton';
 import AvatarCard from '../components/avatarCard';
 import SessionStats from '../components/trackedStats';
-
-
+import { PanGestureHandler } from 'react-native-gesture-handler';
+import { useCubeNav } from '../context/CubeNavigationContext';
 
 const UserProfileScreen = ({ route, navigation }) => {
+  console.log('route', route);
   const username = route?.params?.username;
   const timestamp = route?.params?.timestamp;
   const { user } = useAuth();
@@ -30,6 +31,7 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const { resetToHome } = useCubeNav();
   
   const handleLikeSuccess = (postId) => {
     const updatedProfile = { ...profile };
@@ -188,9 +190,27 @@ const UserProfileScreen = ({ route, navigation }) => {
   }
 
   return (
+    <PanGestureHandler
+    onGestureEvent={({ nativeEvent }) => {
+      if (nativeEvent.translationX > 50) {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        }
+      }
+    }}
+  >
+    
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => {
+          resetToHome();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+        }}
+        style={styles.backButton}
+        >
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
@@ -319,6 +339,7 @@ const UserProfileScreen = ({ route, navigation }) => {
         </View>
       </ScrollView>
     </SafeAreaView>
+   </PanGestureHandler>
   );
 };
 
@@ -331,7 +352,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 15,
+    padding: 10,
+    marginTop: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
   },
@@ -376,6 +398,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerContainer: {
+    marginLeft: 40,
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
