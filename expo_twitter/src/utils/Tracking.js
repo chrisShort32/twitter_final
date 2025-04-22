@@ -15,6 +15,31 @@ export const addScreenView = async (screenName) => {
     await AsyncStorage.setItem(key, JSON.stringify(views));
 };
 
+export const addProfileView = async (targetUsername) => {
+  try {
+    const userStr = await AsyncStorage.getItem('user');
+    if (!userStr) return;
+
+    const { username } = JSON.parse(userStr);
+    if (username === targetUsername) return;
+    const key = `profileViews-${username}`;
+    
+    const stored = await AsyncStorage.getItem(key);
+    let views = stored ? JSON.parse(stored) : [];
+
+    // Avoid duplicates in a row and keep only recent 10
+    if (views[0] !== targetUsername) {
+      views.unshift(targetUsername);
+      views = views.slice(0, 10); // Keep latest 10
+    }
+
+    await AsyncStorage.setItem(key, JSON.stringify(views));
+  } catch (err) {
+    console.error('Error adding profile view:', err);
+  }
+};
+
+
 export const incrementButtonStat = async (action) => {
     const userId = await getUserId();
     if (!userId) return;

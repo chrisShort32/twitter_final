@@ -23,8 +23,9 @@ const SessionStats = ({ visible }) => {
         return;
       }
 
-      const [screenViews, buttonStats, timeSpent, recentSearches, locationToggle] = await Promise.all([
+      const [screenViews, profileViews, buttonStats, timeSpent, recentSearches, locationToggle] = await Promise.all([
         AsyncStorage.getItem(`screenViews-${username}`),
+        AsyncStorage.getItem(`profileViews-${username}`),
         AsyncStorage.getItem(`buttonStats-${username}`),
         AsyncStorage.getItem(`timeSpent-${username}`),
         AsyncStorage.getItem(`recentSearches-${username}`),
@@ -33,6 +34,7 @@ const SessionStats = ({ visible }) => {
 
       setTrackingData({
         screenViews: JSON.parse(screenViews) || [],
+        profileViews: JSON.parse(profileViews) || [],
         buttonStats: JSON.parse(buttonStats) || {},
         timeSpent: JSON.parse(timeSpent) || {},
         recentSearches: JSON.parse(recentSearches) || [],
@@ -54,6 +56,16 @@ const SessionStats = ({ visible }) => {
       {Object.entries(trackingData.timeSpent).map(([screen, ms]) => (
         <Text key={screen} style={styles.value}>- {screen}: {(ms / 1000).toFixed(1)}s</Text>
       ))}
+
+      <Text style={styles.label}>Recently Viewed Profiles:</Text>
+        {Array.isArray(trackingData.profileViews) &&trackingData.profileViews.length > 0 ? (
+        <Text style={styles.value}>
+          {trackingData.profileViews.join(', ')}
+        </Text>
+      ) : (
+      <Text style={styles.value}>No profiles viewed yet</Text>
+      )}
+
 
       <Text style={styles.label}>Button Usage:</Text>
       {Object.entries(trackingData.buttonStats).map(([action, count]) => (

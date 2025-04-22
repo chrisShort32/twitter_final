@@ -17,6 +17,8 @@ import AvatarCard from '../components/avatarCard';
 import SessionStats from '../components/trackedStats';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useCubeNav } from '../context/CubeNavigationContext';
+import { addScreenView, addProfileView, startScreenTimer, stopScreenTimer, incrementButtonStat } from '../utils/Tracking';
+
 
 const UserProfileScreen = ({ route, navigation }) => {
   console.log('route', route);
@@ -32,9 +34,18 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [followingCount, setFollowingCount] = useState(0);
   const { resetToHome } = useCubeNav();
   
+  useEffect(() => {
+    addScreenView('UserProfileScreen');
+    startScreenTimer();
+  
+    return () => {
+      stopScreenTimer('UserProfileScreen');
+    };
+  }, []);
+  
   const handleLikeSuccess = (postId) => {
     const updatedProfile = { ...profile };
-  
+    incrementButtonStat('likePressed');
     const updateList = (list) =>
       list?.map((post) =>
         post.id === postId
@@ -51,7 +62,7 @@ const UserProfileScreen = ({ route, navigation }) => {
   
   const handleReYeetSuccess = (postId) => {
     const updatedProfile = { ...profile };
-  
+    incrementButtonStat('reyeetPressed');
     const updateList = (list) =>
       list?.map((post) =>
         post.id === postId
@@ -81,7 +92,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     
     // Fetch user profile data
     fetchUserProfile();
-    
+    addProfileView(username);
     // Return cleanup function
     return () => {
 
@@ -137,6 +148,8 @@ const UserProfileScreen = ({ route, navigation }) => {
       if (response.success) {
         setIsFollowing(response.followed);
         setFollowersCount(prev => response.followed ? prev + 1 : prev - 1);
+        incrementButtonStat(isFollowing ? 'unfollowPressed' : 'followPressed');
+
       }
        
     } catch (err) {
@@ -146,6 +159,7 @@ const UserProfileScreen = ({ route, navigation }) => {
 
   const handleTabPress = (tab) => {
     setActiveTab(tab);
+    incrementButtonStat(`${tab}TabViewed`);
   };
  
   const isMyProfile = user?.username === profile?.username;
