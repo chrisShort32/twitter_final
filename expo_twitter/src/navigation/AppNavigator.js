@@ -1,19 +1,24 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import CubeSwipeScreen from '../screens/CubeSwipeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import FeedbackSurveyScreen from '../screens/FeedbackSurveyScreen';
 import { useAuth } from '../context/AuthContext';
+import { Dimensions } from 'react-native';
+
+
+
 
 const Stack = createStackNavigator();
 
+
 const AppNavigator = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
-
+  const previousIndexRef = useRef(0);
+  const { width } = Dimensions.get('window');
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -29,36 +34,69 @@ const AppNavigator = () => {
           headerShown: false,
           cardStyle: { flex: 1 },
           animationEnabled: true,
+          transitionSpec: {
+            open: { animation: 'timing', config: {duration: 800}},
+            close: {animation: 'timing', config: {duration: 600}},
+          },
         }}
       >
         {isAuthenticated ? (
           // User is signed in
           <>
             <Stack.Screen name="Home" component={HomeScreen}/>
-            <Stack.Screen
-              name="CubeSwipe"
-              component={CubeSwipeScreen}
-              options={{ headerShown: false }}
-            />
             <Stack.Screen 
               name="UserProfile" 
               component={UserProfileScreen} 
               options={{
-                gestureEnabled: false,
+                gestureEnabled: true,
                 animationEnabled: true,
                 detachPreviousScreen: false,
                 presentation: 'card',
-                cardStyleInterpolator: ({ current, layouts }) => {
+                cardStyleInterpolator: ({ current, next, index, closing }) => {
+                  const isBack = index < previousIndexRef.current;
+                  console.log('index', index, 'prev', previousIndexRef.current, 'isBack', isBack);
+                  previousIndexRef.current = index;
                   return {
                     cardStyle: {
+                      backgroundColor: '#fff',
+                      
+                      //backfaceVisibility: 'hidden',
                       transform: [
+                        { perspective: 600 },
+
                         {
-                          translateX: current.progress.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [layouts.screen.width, 0],
+                          rotateY: current.progress.interpolate({
+                            inputRange: [0, 0.5, 1],
+                            outputRange: isBack ? ['180deg', '90deg', '0deg'] : ['180deg', '90deg', '0deg'],
+                            extrapolate: 'clamp',
+                          }),
+                        },
+                        {
+                          scaleX: current.progress.interpolate({
+                            inputRange: [0,0.5,1],
+                            outputRange: [0.85,1.05,1],
                           }),
                         },
                       ],
+                      
+                      opacity: current.progress.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [1, 0.7, 1],
+                      }),
+                      shadowColor: '#000',
+                      shadowOffset: {
+                        width: 10,
+                        height: 0,
+                      },
+                      shadowOpacity: current.progress.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [0, 0.4, 0], // Shadow peaks mid-flip
+                      }),
+                      shadowRadius: 15,
+                      elevation: 8,
+                    },
+                    containerStyle: {
+                      backgroundColor: '#ff000',
                     },
                   };
                 },

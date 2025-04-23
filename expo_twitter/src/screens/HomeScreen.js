@@ -18,12 +18,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CookieConsentModal from '../components/Consent';
 import { addScreenView, startScreenTimer, stopScreenTimer, incrementButtonStat } from '../utils/Tracking';
 
+
 const HomeScreen = ({ navigation }) => {
   const { user, logout} = useAuth();
   const [activeTab, setActiveTab] = useState('following');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showConsentModal, setShowConsentModal] = useState(false); 
   const [hasCheckedConsent, setHasCheckedConsent] = useState(false);
+  
 
   useFocusEffect(
     useCallback(() => {
@@ -176,6 +178,7 @@ const HomeScreen = ({ navigation }) => {
             refreshTrigger={refreshTrigger}
             onLikeSuccess={handleLikeSuccess}
             onReYeetSuccess={handleReYeetSuccess}
+            
           />
          ) : (
          <MyPostsFeed
@@ -187,6 +190,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
     </ScrollView>
   </SafeAreaView>
+
   );
 };
 

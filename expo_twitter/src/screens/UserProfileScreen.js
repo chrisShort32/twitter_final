@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,13 +15,13 @@ import Yeet from '../components/Yeet';
 import FollowButton from '../components/FollowButton';
 import AvatarCard from '../components/avatarCard';
 import SessionStats from '../components/trackedStats';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useCubeNav } from '../context/CubeNavigationContext';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { addScreenView, addProfileView, startScreenTimer, stopScreenTimer, incrementButtonStat } from '../utils/Tracking';
 
 
+
 const UserProfileScreen = ({ route, navigation }) => {
-  console.log('route', route);
+  
   const username = route?.params?.username;
   const timestamp = route?.params?.timestamp;
   const { user } = useAuth();
@@ -32,7 +32,10 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-  const { resetToHome } = useCubeNav();
+  const [isSwiping, setIsSwiping] = useState(false);
+  const parentGesture = useRef();
+  const childGesture = useRef();
+
   
   useEffect(() => {
     addScreenView('UserProfileScreen');
@@ -42,6 +45,22 @@ const UserProfileScreen = ({ route, navigation }) => {
       stopScreenTimer('UserProfileScreen');
     };
   }, []);
+
+  const handleSwipeStateChange = ({ nativeEvent }) => {
+    if (
+      nativeEvent.state === State.END &&
+      nativeEvent.translationX > 50 &&
+      !isSwiping
+    ) {
+      setIsSwiping(true);
+      console.log('navigating back', username);
+      setTimeout(() => {
+        navigation.goBack();
+      }, 50);
+      
+      setTimeout(() => setIsSwiping(false), 300);
+    }
+  };
   
   const handleLikeSuccess = (postId) => {
     const updatedProfile = { ...profile };
@@ -161,7 +180,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     setActiveTab(tab);
     incrementButtonStat(`${tab}TabViewed`);
   };
- 
+  
   const isMyProfile = user?.username === profile?.username;
   if (loading) {
     return (
@@ -195,23 +214,16 @@ const UserProfileScreen = ({ route, navigation }) => {
 
   return (
     <PanGestureHandler
-    onGestureEvent={({ nativeEvent }) => {
-      if (nativeEvent.translationX > 50) {
-        if (navigation.canGoBack()) {
-          navigation.goBack();
-        }
-      }
-    }}
+    ref={parentGesture}
+    onHandlerStateChange={handleSwipeStateChange}
+    simultaneousHandlers={childGesture}
+    activeOffsetX={[-30, 30]}
+    failOffsetY={[-10, 10]}
   >
-    
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => {
-          resetToHome();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          });
+          navigation.goBack();
         }}
         style={styles.backButton}
         >
@@ -288,6 +300,8 @@ const UserProfileScreen = ({ route, navigation }) => {
                       post={post}
                       onLikeSuccess={handleLikeSuccess} 
                       onReYeetSuccess={handleReYeetSuccess}
+                      childGestureRef={childGesture}
+                      parentGestureRef={parentGesture}
                     />
                   
                   ))}
@@ -309,6 +323,9 @@ const UserProfileScreen = ({ route, navigation }) => {
                       post={post}
                       onLikeSuccess={handleLikeSuccess} 
                       onReYeetSuccess={handleReYeetSuccess}
+                      childGestureRef={childGesture}
+                      parentGestureRef={parentGesture}
+
                     />
                       
                   ))}
@@ -330,6 +347,8 @@ const UserProfileScreen = ({ route, navigation }) => {
                         post={post}
                         onLikeSuccess={handleLikeSuccess} 
                         onReYeetSuccess={handleReYeetSuccess}
+                        childGestureRef={childGesture}
+                        parentGestureRef={parentGesture}
                       />
                   ))}
                 </>

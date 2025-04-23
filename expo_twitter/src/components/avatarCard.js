@@ -4,7 +4,6 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 
 
 const AvatarCard = ({ user }) => {
-  console.log('this is the picture:', user.picture);
   return (
     <View style={styles.container}>
       <Image

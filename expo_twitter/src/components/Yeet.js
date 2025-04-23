@@ -4,40 +4,32 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import MapModal from './MadModal';
 import { useNavigation } from '@react-navigation/native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useCubeNav } from '../context/CubeNavigationContext';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
-const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
+
+const Yeet = ({ post, onLikeSuccess, onReYeetSuccess, childGestureRef, parentGestureRef }) => {
   const [hasNavigated, setHasNavigated] = useState(false);
   const { user } = useAuth();
   const navigation = useNavigation();
-  const { pushProfile } = useCubeNav();
   
   const handleSwipe = ({ nativeEvent }) => {
-    if (nativeEvent.translationX < -50 && !hasNavigated) {
-      console.log('Swiped left on post by', post.username);
+    if (nativeEvent.translationX < -50 &&
+      nativeEvent.state === State.END &&
+      !hasNavigated
+    ) {
       setHasNavigated(true);
-      
-      // Navigate with cube effect (same navigator, different screen)
-      if (post.username === user?.username) return;
-
-      // add the profile to the nav stack
-      pushProfile(post.username);
-
-      navigation.push('CubeSwipe', {
-        username: post.username, // pass to profile screen
-      });
+      setTimeout(() => {
+        navigation.push('UserProfile', {
+          username: post.username,
+          timestamp: Date.now(),
+          direction: 'forward',
+        });
+      }, 50);
+     
+      setTimeout(() => setHasNavigated(false), 300);
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      setHasNavigated(false);
-    });
-  
-    return unsubscribe;
-  }, [navigation]);
-  
   // Local state 
   const [isLiked, setIsLiked] = useState(post.liked_by_user || false);
   const [isRetweeted, setIsRetweeted] = useState(post.retweeted_by_user || false);
@@ -86,15 +78,15 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   const PostContent = () => (
     <View style={styles.post}>
         <TouchableOpacity
-          onPress={() => 
-            navigation.navigate('UserProfile', {
-              username: post.username,
-              timestamp: new Date().getTime(),
-            })
-          }
+         onPress={() => {
+          navigation.push('UserProfile', {
+            username: post.username,
+            timestamp: Date.now(),
+          })}}
         >
           <Text style={styles.username}>@{post.username}</Text>
         </TouchableOpacity>
+
         <Text style={styles.content}>{post.post_content}</Text>
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>
@@ -150,9 +142,11 @@ const Yeet = ({ post, onLikeSuccess, onReYeetSuccess }) => {
   } else {
     return (
       <PanGestureHandler
-        onGestureEvent={handleSwipe}
+        ref={childGestureRef}
+        onHandlerStateChange={handleSwipe}
         activeOffsetX={[-30, 30]}
         failOffsetY={[-10, 10]}
+        simultaneousHandlers={parentGestureRef}
        >
         <View>
           <PostContent />

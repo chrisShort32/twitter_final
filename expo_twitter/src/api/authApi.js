@@ -57,11 +57,8 @@ const API_BASE_URL =
  */
 export const loginUser = async (email, password) => {
   try {
-     console.log('Request body:', JSON.stringify({ email, password }));
      await AsyncStorage.removeItem('user');
      // Make HTTP request for login
-     console.log('Final login URL:', `${API_BASE_URL}/auth/login/`);
-
      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
        method: 'POST',
        headers: {
@@ -70,16 +67,10 @@ export const loginUser = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
 
-    console.log('Login response status:', response.status);
-    console.log('Login response headers:', response.headers);
-
     const data = await response.json();
 
     if (response.ok && data.access) {
         const { access, user } = data;
-
-        console.log('user', user);
-        console.log('Profile pic fetch URL:', `${API_BASE_URL}/profile_pic/?user_id=${user.pk}`);
 
         const pic_data_response = await fetch(`${API_BASE_URL}/profile_pic?user_id=${user.pk}`, {
           method: 'GET',
@@ -129,7 +120,6 @@ export const googleSignIn = async (userData) => {
 
 
       await AsyncStorage.setItem('user', JSON.stringify(fullUserData));
-      console.log('logindata.access', loginData.access)
       await setSecureToken(loginData.access);
       return {success: true, ...fullUserData};
       
@@ -148,7 +138,6 @@ export const googleSignIn = async (userData) => {
 export const validateNewUser = async(userData) => {
   try {
     const { email, username } = userData;
-    console.log("user data: ", JSON.stringify(userData));
 
     // send the data
     const response = await fetch(`${API_BASE_URL}/validate_new_user/`, {
@@ -186,7 +175,6 @@ export const validateNewUser = async(userData) => {
 export const registerUser = async (userData) => {
   try {
     const { first_name, last_name, email, password1, password2, username } = userData;
-    console.log("user data: ", JSON.stringify(userData));  
     // Send reg data to backend
     const response = await fetch(`${API_BASE_URL}/auth/registration/`, {
         method: 'POST',
@@ -357,10 +345,7 @@ export const getUserProfile = async (username) => {
       console.error('[getUserProfile] Not authenticated');
       return { success: false, error: 'User not authenticated' };
     }
-
-    console.log(`[getUserProfile] Fetching profile for: ${username}`);
     const url = `${API_BASE_URL}/user_profile/${encodeURIComponent(username)}/`;
-    console.log(`[getUserProfile] URL: ${url}`);
     
     const token = await getSecureToken();
     const response = await fetch(url, {
@@ -370,15 +355,11 @@ export const getUserProfile = async (username) => {
         'Authorization': `Bearer ${token}`
       }
     });
-
-    console.log(`[getUserProfile] Response status: ${response.status}`);
     
     // Get the response data
     const data = await response.json();
-    console.log(`[getUserProfile] Response data: ${JSON.stringify(data).substring(0, 200)}...`);
 
     if (response.ok) {
-      console.log(`[getUserProfile] Success for: ${username}, found: posts=${data.posts?.length || 0}, liked=${data.liked_posts?.length || 0}, retweets=${data.retweeted_posts?.length || 0}`);
       return { success: true, profile: data };
     } else {
       console.error(`[getUserProfile] Error for ${username}:`, data.error || response.statusText);
