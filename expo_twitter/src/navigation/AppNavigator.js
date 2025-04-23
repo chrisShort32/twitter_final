@@ -35,7 +35,7 @@ const AppNavigator = () => {
           cardStyle: { flex: 1 },
           animationEnabled: true,
           transitionSpec: {
-            open: { animation: 'timing', config: {duration: 800}},
+            open: { animation: 'timing', config: {duration: 600}},
             close: {animation: 'timing', config: {duration: 600}},
           },
         }}
@@ -50,39 +50,53 @@ const AppNavigator = () => {
               options={{
                 gestureEnabled: true,
                 animationEnabled: true,
-                detachPreviousScreen: false,
+                detachPreviousScreen: true,
                 presentation: 'card',
                 cardStyleInterpolator: ({ current, next, index, closing }) => {
                   const isBack = index < previousIndexRef.current;
                   console.log('index', index, 'prev', previousIndexRef.current, 'isBack', isBack);
                   previousIndexRef.current = index;
+                  const outgoingOpacity = next
+                    ? next.progress.interpolate({
+                      inputRange: [0,0.3,1],
+                      outputRange: [1,0,0],
+                    })
+                    : 1;
                   return {
                     cardStyle: {
                       backgroundColor: '#fff',
                       
                       //backfaceVisibility: 'hidden',
                       transform: [
-                        { perspective: 600 },
+                        { perspective: 500 },
 
                         {
                           rotateY: current.progress.interpolate({
-                            inputRange: [0, 0.5, 1],
-                            outputRange: isBack ? ['180deg', '90deg', '0deg'] : ['180deg', '90deg', '0deg'],
+                            inputRange: [0, 1],
+                            outputRange: isBack ? ['90deg', '0deg'] : ['90deg', '0deg'],
                             extrapolate: 'clamp',
                           }),
                         },
                         {
                           scaleX: current.progress.interpolate({
                             inputRange: [0,0.5,1],
-                            outputRange: [0.85,1.05,1],
+                            outputRange: [0.95,1.1,1],
+                          }),
+                        },
+                        {
+                          scaleY: current.progress.interpolate({
+                            inputRange: [0,0.5,1],
+                            outputRange: [0.95,1.05,1],
                           }),
                         },
                       ],
                       
-                      opacity: current.progress.interpolate({
-                        inputRange: [0, 0.5, 1],
-                        outputRange: [1, 0.7, 1],
-                      }),
+                      opacity: isBack
+                        ? current.progress.interpolate({
+                            inputRange: [0, 0.5, 1],
+                            outputRange: [0, 0.5, 1],
+                      })
+                      : outgoingOpacity,
                       shadowColor: '#000',
                       shadowOffset: {
                         width: 10,
@@ -90,7 +104,7 @@ const AppNavigator = () => {
                       },
                       shadowOpacity: current.progress.interpolate({
                         inputRange: [0, 0.5, 1],
-                        outputRange: [0, 0.4, 0], // Shadow peaks mid-flip
+                        outputRange: [1, 0.5, 0], // Shadow peaks mid-flip
                       }),
                       shadowRadius: 15,
                       elevation: 8,
